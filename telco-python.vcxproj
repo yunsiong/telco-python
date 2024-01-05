@@ -20,9 +20,9 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7505F884-DD69-4F23-ADE6-1E0E049AB018}</ProjectGuid>
-    <RootNamespace>frida</RootNamespace>
+    <RootNamespace>telco</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <ProjectName>frida-python</ProjectName>
+    <ProjectName>telco-python</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -47,37 +47,37 @@
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <Import Project="$(SolutionDir)releng\frida-toolchain.props" />
+  <Import Project="$(SolutionDir)releng\telco-toolchain.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)releng\frida-$(Configuration).props" />
+    <Import Project="$(SolutionDir)releng\telco-$(Configuration).props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)releng\frida-$(Configuration).props" />
+    <Import Project="$(SolutionDir)releng\telco-$(Configuration).props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)releng\frida-$(Configuration).props" />
+    <Import Project="$(SolutionDir)releng\telco-$(Configuration).props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)releng\frida-$(Configuration).props" />
+    <Import Project="$(SolutionDir)releng\telco-$(Configuration).props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)build\frida-windows\$(PlatformName)-$(Configuration)\lib\python3.10\site-packages\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)build\frida-windows\$(PlatformName)-$(Configuration)\lib\python3.10\site-packages\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)build\frida-windows\$(PlatformName)-$(Configuration)\lib\python3.10\site-packages\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)build\frida-windows\$(PlatformName)-$(Configuration)\lib\python3.10\site-packages\</OutDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_frida</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_frida</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_frida</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_frida</TargetName>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)build\telco-windows\$(PlatformName)-$(Configuration)\lib\python3.10\site-packages\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)build\telco-windows\$(PlatformName)-$(Configuration)\lib\python3.10\site-packages\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)build\telco-windows\$(PlatformName)-$(Configuration)\lib\python3.10\site-packages\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)build\telco-windows\$(PlatformName)-$(Configuration)\lib\python3.10\site-packages\</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_telco</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_telco</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_telco</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_telco</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.pyd</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.pyd</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.pyd</TargetExt>
@@ -89,8 +89,8 @@
       <AdditionalLibraryDirectories>$(PythonLocation)\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(IntDir)..\frida-core\api;$(PythonLocation)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>$(FridaComponentDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir)..\telco-core\api;$(PythonLocation)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>$(TelcoComponentDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -99,8 +99,8 @@
       <AdditionalLibraryDirectories>$(PythonLocation)\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(IntDir)..\frida-core\api;$(PythonLocation)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>$(FridaComponentDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir)..\telco-core\api;$(PythonLocation)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>$(TelcoComponentDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -109,8 +109,8 @@
       <AdditionalLibraryDirectories>$(PythonLocation)\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(IntDir)..\frida-core\api;$(PythonLocation)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>$(FridaComponentDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir)..\telco-core\api;$(PythonLocation)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>$(TelcoComponentDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -119,12 +119,12 @@
       <AdditionalLibraryDirectories>$(PythonLocation)\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(IntDir)..\frida-core\api;$(PythonLocation)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>$(FridaComponentDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir)..\telco-core\api;$(PythonLocation)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>$(TelcoComponentDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\frida-core\frida-core.vcxproj">
+    <ProjectReference Include="..\telco-core\telco-core.vcxproj">
       <Project>{b7dc9b02-a5ff-4aa1-b2a2-dc1653168d44}</Project>
       <Private>false</Private>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
@@ -134,41 +134,41 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\_frida.c" />
+    <ClCompile Include="src\_telco.c" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="frida\__init__.py">
+    <CustomBuild Include="telco\__init__.py">
       <FileType>Document</FileType>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Installing frida package</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Installing frida package</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Installing frida package</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Installing frida package</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">rmdir /S /Q $(OutDir)frida 2&gt;NUL
-mkdir $(OutDir)frida || exit 1
-copy /B /Y "$(ProjectDir)frida\*.py" $(OutDir)frida || exit 1
-echo. &gt; $(IntDir)frida-package.stamp</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)frida-package.stamp</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)frida\core.py</AdditionalInputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">rmdir /S /Q $(OutDir)frida 2&gt;NUL
-mkdir $(OutDir)frida || exit 1
-copy /B /Y "$(ProjectDir)frida\*.py" $(OutDir)frida || exit 1
-echo. &gt; $(IntDir)frida-package.stamp</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)frida-package.stamp</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)frida\core.py</AdditionalInputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">rmdir /S /Q $(OutDir)frida 2&gt;NUL
-mkdir $(OutDir)frida || exit 1
-copy /B /Y "$(ProjectDir)frida\*.py" $(OutDir)frida || exit 1
-echo. &gt; $(IntDir)frida-package.stamp</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)frida-package.stamp</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)frida\core.py</AdditionalInputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">rmdir /S /Q $(OutDir)frida 2&gt;NUL
-mkdir $(OutDir)frida || exit 1
-copy /B /Y "$(ProjectDir)frida\*.py" $(OutDir)frida || exit 1
-echo. &gt; $(IntDir)frida-package.stamp</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)frida-package.stamp</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)frida\core.py</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Installing telco package</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Installing telco package</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Installing telco package</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Installing telco package</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">rmdir /S /Q $(OutDir)telco 2&gt;NUL
+mkdir $(OutDir)telco || exit 1
+copy /B /Y "$(ProjectDir)telco\*.py" $(OutDir)telco || exit 1
+echo. &gt; $(IntDir)telco-package.stamp</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)telco-package.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)telco\core.py</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">rmdir /S /Q $(OutDir)telco 2&gt;NUL
+mkdir $(OutDir)telco || exit 1
+copy /B /Y "$(ProjectDir)telco\*.py" $(OutDir)telco || exit 1
+echo. &gt; $(IntDir)telco-package.stamp</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)telco-package.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)telco\core.py</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">rmdir /S /Q $(OutDir)telco 2&gt;NUL
+mkdir $(OutDir)telco || exit 1
+copy /B /Y "$(ProjectDir)telco\*.py" $(OutDir)telco || exit 1
+echo. &gt; $(IntDir)telco-package.stamp</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)telco-package.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)telco\core.py</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">rmdir /S /Q $(OutDir)telco 2&gt;NUL
+mkdir $(OutDir)telco || exit 1
+copy /B /Y "$(ProjectDir)telco\*.py" $(OutDir)telco || exit 1
+echo. &gt; $(IntDir)telco-package.stamp</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)telco-package.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)telco\core.py</AdditionalInputs>
     </CustomBuild>
-    <None Include="frida\core.py" />
+    <None Include="telco\core.py" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,4 +1,4 @@
-import frida
+import telco
 
 embed_script = """
 const button = {
@@ -23,7 +23,7 @@ console.log('Button after:', JSON.stringify(button));
 runtime = "v8"
 
 
-session = frida.attach(0)
+session = telco.attach(0)
 
 snapshot = session.snapshot_script(embed_script, warmup_script=warmup_script, runtime=runtime)
 

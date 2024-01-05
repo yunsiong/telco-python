@@ -1,16 +1,16 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 
-import frida from './modules/frida';
-import fridaBus from './plugins/frida';
+import telco from './modules/telco';
+import telcoBus from './plugins/telco';
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
   modules: {
-    frida
+    telco
   },
   plugins: [
-    fridaBus()
+    telcoBus()
   ]
 });

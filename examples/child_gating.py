@@ -1,8 +1,8 @@
 import threading
 
-from frida_tools.application import Reactor
+from telco_tools.application import Reactor
 
-import frida
+import telco
 
 
 class Application:
@@ -10,7 +10,7 @@ class Application:
         self._stop_requested = threading.Event()
         self._reactor = Reactor(run_until_return=lambda reactor: self._stop_requested.wait())
 
-        self._device = frida.get_local_device()
+        self._device = telco.get_local_device()
         self._sessions = set()
 
         self._device.on("child-added", lambda child: self._reactor.schedule(lambda: self._on_child_added(child)))

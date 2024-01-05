@@ -1,9 +1,9 @@
 import json
 import sys
 
-from frida_tools.application import Reactor
+from telco_tools.application import Reactor
 
-import frida
+import telco
 
 
 class Application:
@@ -11,7 +11,7 @@ class Application:
         self._reactor = Reactor(run_until_return=self._process_input)
 
         token = {"nick": nick, "secret": "knock-knock"}
-        self._device = frida.get_device_manager().add_remote_device("::1", token=json.dumps(token))
+        self._device = telco.get_device_manager().add_remote_device("::1", token=json.dumps(token))
 
         self._bus = self._device.bus
         self._bus.on("message", lambda *args: self._reactor.schedule(lambda: self._on_bus_message(*args)))

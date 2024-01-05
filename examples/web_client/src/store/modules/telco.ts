@@ -1,12 +1,12 @@
 import { Module } from 'vuex';
 
-interface FridaState {
+interface TelcoState {
   processes: Process[],
 }
 
 type Process = [number, string];
 
-const fridaModule: Module<FridaState, any> = {
+const telcoModule: Module<TelcoState, any> = {
   state: {
     processes: []
   },
@@ -15,4 +15,4 @@ const fridaModule: Module<FridaState, any> = {
   }
 };
 
-export default fridaModule;
+export default telcoModule;

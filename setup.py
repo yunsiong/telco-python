@@ -12,30 +12,30 @@ in_source_package = os.path.isfile(pkg_info)
 if in_source_package:
     with open(pkg_info, "r", encoding="utf-8") as f:
         version_line = [line for line in f if line.startswith("Version: ")][0].strip()
-    frida_version = version_line[9:]
+    telco_version = version_line[9:]
 else:
-    frida_version = os.environ.get("FRIDA_VERSION", "0.0.0")
+    telco_version = os.environ.get("TELCO_VERSION", "0.0.0")
 with open(os.path.join(package_dir, "README.md"), "r", encoding="utf-8") as f:
     long_description = f.read()
-frida_extension = os.environ.get("FRIDA_EXTENSION", None)
+telco_extension = os.environ.get("TELCO_EXTENSION", None)
 
 
-class FridaPrebuiltExt(build_ext):
+class TelcoPrebuiltExt(build_ext):
     def build_extension(self, ext):
         target = self.get_ext_fullpath(ext.name)
         target_dir = os.path.dirname(target)
         os.makedirs(target_dir, exist_ok=True)
 
-        shutil.copyfile(frida_extension, target)
+        shutil.copyfile(telco_extension, target)
 
 
-class FridaMissingDevkitBuildExt(build_ext):
+class TelcoMissingDevkitBuildExt(build_ext):
     def build_extension(self, ext):
         raise RuntimeError(
-            "Need frida-core devkit to build from source.\n"
-            "Download one from https://github.com/frida/frida/releases, "
+            "Need telco-core devkit to build from source.\n"
+            "Download one from https://github.com/telco/telco/releases, "
             "extract it to a directory,\n"
-            "and then add an environment variable named FRIDA_CORE_DEVKIT "
+            "and then add an environment variable named TELCO_CORE_DEVKIT "
             "pointing at the directory."
         )
 
@@ -46,21 +46,21 @@ libraries = []
 extra_link_args = []
 
 cmdclass = {}
-if frida_extension is not None:
-    cmdclass["build_ext"] = FridaPrebuiltExt
+if telco_extension is not None:
+    cmdclass["build_ext"] = TelcoPrebuiltExt
 else:
-    devkit_dir = os.environ.get("FRIDA_CORE_DEVKIT", None)
+    devkit_dir = os.environ.get("TELCO_CORE_DEVKIT", None)
     if devkit_dir is not None:
         include_dirs += [devkit_dir]
         library_dirs += [devkit_dir]
-        libraries += ["frida-core"]
+        libraries += ["telco-core"]
 
         system = platform.system()
         if system == "Windows":
             pass
         elif system == "Darwin":
             extra_link_args += [
-                "-Wl,-exported_symbol,_PyInit__frida",
+                "-Wl,-exported_symbol,_PyInit__telco",
                 "-Wl,-dead_strip",
             ]
             if "_PYTHON_HOST_PLATFORM" not in os.environ:
@@ -74,7 +74,7 @@ else:
                 os.environ["ARCHFLAGS"] = f"-arch {host_arch}"
                 os.environ["MACOSX_DEPLOYMENT_TARGET"] = macos_req
         else:
-            version_script = os.path.join(package_dir, "src", "_frida.version")
+            version_script = os.path.join(package_dir, "src", "_telco.version")
             if not os.path.exists(version_script):
                 with open(version_script, "w", encoding="utf-8") as f:
                     f.write(
@@ -82,7 +82,7 @@ else:
                             [
                                 "{",
                                 "  global:",
-                                "    PyInit__frida;",
+                                "    PyInit__telco;",
                                 "",
                                 "  local:",
                                 "    *;",
@@ -95,23 +95,23 @@ else:
                 "-Wl,--gc-sections",
             ]
     else:
-        cmdclass["build_ext"] = FridaMissingDevkitBuildExt
+        cmdclass["build_ext"] = TelcoMissingDevkitBuildExt
 
 
 if __name__ == "__main__":
     setup(
-        name="frida",
-        version=frida_version,
+        name="telco",
+        version=telco_version,
         description="Dynamic instrumentation toolkit for developers, reverse-engineers, and security researchers",
         long_description=long_description,
         long_description_content_type="text/markdown",
-        author="Frida Developers",
-        author_email="oleavr@frida.re",
-        url="https://frida.re",
+        author="Telco Developers",
+        author_email="oleavr@telco.re",
+        url="https://telco.re",
         install_requires=["typing_extensions; python_version<'3.11'"],
         python_requires=">=3.7",
         license="wxWindows Library Licence, Version 3.1",
-        keywords="frida debugger dynamic instrumentation inject javascript windows macos linux ios iphone ipad android qnx",
+        keywords="telco debugger dynamic instrumentation inject javascript windows macos linux ios iphone ipad android qnx",
         classifiers=[
             "Development Status :: 5 - Production/Stable",
             "Environment :: Console",
@@ -134,12 +134,12 @@ if __name__ == "__main__":
             "Topic :: Software Development :: Debuggers",
             "Topic :: Software Development :: Libraries :: Python Modules",
         ],
-        packages=["frida", "_frida"],
-        package_data={"frida": ["py.typed"], "_frida": ["py.typed", "__init__.pyi"]},
+        packages=["telco", "_telco"],
+        package_data={"telco": ["py.typed"], "_telco": ["py.typed", "__init__.pyi"]},
         ext_modules=[
             Extension(
-                name="_frida",
-                sources=["src/_frida.c"],
+                name="_telco",
+                sources=["src/_telco.c"],
                 include_dirs=include_dirs,
                 library_dirs=library_dirs,
                 libraries=libraries,

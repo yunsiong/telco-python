@@ -8,7 +8,7 @@
 
 import sys
 
-import frida
+import telco
 
 
 def on_uninjected(id):
@@ -17,7 +17,7 @@ def on_uninjected(id):
 
 (target, library_path) = sys.argv[1:]
 
-device = frida.get_local_device()
+device = telco.get_local_device()
 device.on("uninjected", on_uninjected)
 with open(library_path, "rb") as library_file:
     library_blob = library_file.read()

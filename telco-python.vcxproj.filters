@@ -13,23 +13,23 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\frida">
+    <Filter Include="Source Files\telco">
       <UniqueIdentifier>{e8366f87-de40-4415-8724-a51c48fc532d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\_frida.c">
+    <ClCompile Include="src\_telco.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="frida\core.py">
-      <Filter>Source Files\frida</Filter>
+    <None Include="telco\core.py">
+      <Filter>Source Files\telco</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="frida\__init__.py">
-      <Filter>Source Files\frida</Filter>
+    <CustomBuild Include="telco\__init__.py">
+      <Filter>Source Files\telco</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

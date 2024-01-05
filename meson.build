@@ -1,4 +1,4 @@
-project('frida-python', 'c', version: '1.0.0')
+project('telco-python', 'c', version: '1.0.0')
 
 host_os = host_machine.system()
 if host_os == 'android'
@@ -9,10 +9,10 @@ endif
 
 cc = meson.get_compiler('c')
 
-frida_component_cflags = []
+telco_component_cflags = []
 ndebug = get_option('b_ndebug')
 if ndebug == 'true' or (ndebug == 'if-release' and not get_option('debug'))
-  frida_component_cflags += [
+  telco_component_cflags += [
     '-DG_DISABLE_ASSERT',
     '-DG_DISABLE_CHECKS',
     '-DG_DISABLE_CAST_CHECKS',
@@ -85,7 +85,7 @@ if host_os != host_os_family
   cdata.set('HAVE_' + host_os.to_upper(), 1)
 endif
 
-frida_core_dep = dependency('frida-core-1.0')
+telco_core_dep = dependency('telco-core-1.0')
 os_deps = []
 if host_os_family != 'windows'
   os_deps += dependency('gio-unix-2.0')
@@ -96,4 +96,4 @@ configure_file(input: 'config.h.in',
   configuration: cdata)
 
 subdir('src')
-subdir('frida')
+subdir('telco')

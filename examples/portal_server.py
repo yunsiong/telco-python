@@ -3,9 +3,9 @@ import hmac
 import json
 from pathlib import Path
 
-from frida_tools.application import Reactor
+from telco_tools.application import Reactor
 
-import frida
+import telco
 
 ENABLE_CONTROL_INTERFACE = True
 
@@ -14,7 +14,7 @@ class Application:
     def __init__(self):
         self._reactor = Reactor(run_until_return=self._process_input)
 
-        cluster_params = frida.EndpointParameters(
+        cluster_params = telco.EndpointParameters(
             address="unix:/Users/oleavr/src/cluster",
             certificate="/Users/oleavr/src/identity2.pem",
             authentication=("token", "wow-such-secret"),
@@ -22,13 +22,13 @@ class Application:
 
         if ENABLE_CONTROL_INTERFACE:
             www = Path(__file__).parent.resolve() / "web_client" / "dist"
-            control_params = frida.EndpointParameters(
+            control_params = telco.EndpointParameters(
                 address="::1", port=27042, authentication=("callback", self._authenticate), asset_root=www
             )
         else:
             control_params = None
 
-        service = frida.PortalService(cluster_params, control_params)
+        service = telco.PortalService(cluster_params, control_params)
         self._service = service
         self._device = service.device
         self._peers = {}

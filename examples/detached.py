@@ -1,6 +1,6 @@
 import sys
 
-import frida
+import telco
 
 
 def on_detached():
@@ -15,7 +15,7 @@ def on_detached_with_varargs(*args):
     print("on_detached_with_varargs:", args)
 
 
-session = frida.attach("Twitter")
+session = telco.attach("Twitter")
 print("attached")
 session.on("detached", on_detached)
 session.on("detached", on_detached_with_reason)

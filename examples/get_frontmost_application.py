@@ -4,9 +4,9 @@ from pygments import highlight
 from pygments.formatters import Terminal256Formatter
 from pygments.lexers import PythonLexer
 
-import frida
+import telco
 
-device = frida.get_usb_device()
+device = telco.get_usb_device()
 
 
 def trim_icon(icon):

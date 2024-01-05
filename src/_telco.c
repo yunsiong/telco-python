@@ -4,7 +4,7 @@
  * Licence: wxWindows Library Licence, Version 3.1
  */
 
-#include <frida-core.h>
+#include <telco-core.h>
 #include <string.h>
 
 #ifdef _MSC_VER
@@ -23,9 +23,9 @@
  * Don't propagate _DEBUG state to pyconfig as it incorrectly attempts to load
  * debug libraries that don't normally ship with Python (e.g. 2.x). Debuggers
  * wishing to spelunk the Python core can override this workaround by defining
- * _FRIDA_ENABLE_PYDEBUG.
+ * _TELCO_ENABLE_PYDEBUG.
  */
-#if defined (_DEBUG) && !defined (_FRIDA_ENABLE_PYDEBUG)
+#if defined (_DEBUG) && !defined (_TELCO_ENABLE_PYDEBUG)
 # undef _DEBUG
 # include <pyconfig.h>
 # define _DEBUG
@@ -55,62 +55,62 @@
 #define MOD_ERROR_VAL NULL
 #define PyRepr_FromString PyUnicode_FromString
 #define PyRepr_FromFormat PyUnicode_FromFormat
-#define PYFRIDA_GETARGSPEC_FUNCTION "getfullargspec"
+#define PYTELCO_GETARGSPEC_FUNCTION "getfullargspec"
 
 #if PY_VERSION_HEX >= 0x03080000
-# define PYFRIDA_NO_PRINT_FUNC_OR_VECTORCALL_OFFSET 0
+# define PYTELCO_NO_PRINT_FUNC_OR_VECTORCALL_OFFSET 0
 #else
-# define PYFRIDA_NO_PRINT_FUNC_OR_VECTORCALL_OFFSET NULL
+# define PYTELCO_NO_PRINT_FUNC_OR_VECTORCALL_OFFSET NULL
 #endif
 
-#define PYFRIDA_TYPE(name) \
-  (&_PYFRIDA_TYPE_VAR (name, type))
-#define PYFRIDA_TYPE_OBJECT(name) \
-  PYFRIDA_TYPE (name)->object
-#define _PYFRIDA_TYPE_VAR(name, var) \
+#define PYTELCO_TYPE(name) \
+  (&_PYTELCO_TYPE_VAR (name, type))
+#define PYTELCO_TYPE_OBJECT(name) \
+  PYTELCO_TYPE (name)->object
+#define _PYTELCO_TYPE_VAR(name, var) \
   G_PASTE (G_PASTE (G_PASTE (Py, name), _), var)
-#define PYFRIDA_DEFINE_BASETYPE(pyname, cname, init_func, destroy_func, ...) \
-  _PYFRIDA_DEFINE_TYPE_SLOTS (cname, __VA_ARGS__); \
-  _PYFRIDA_DEFINE_TYPE_SPEC (cname, pyname, Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE); \
-  static PyGObjectType _PYFRIDA_TYPE_VAR (cname, type) = \
+#define PYTELCO_DEFINE_BASETYPE(pyname, cname, init_func, destroy_func, ...) \
+  _PYTELCO_DEFINE_TYPE_SLOTS (cname, __VA_ARGS__); \
+  _PYTELCO_DEFINE_TYPE_SPEC (cname, pyname, Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE); \
+  static PyGObjectType _PYTELCO_TYPE_VAR (cname, type) = \
   { \
     .parent = NULL, \
     .object = NULL, \
     .init_from_handle = (PyGObjectInitFromHandleFunc) init_func, \
     .destroy = destroy_func, \
   }
-#define PYFRIDA_DEFINE_TYPE(pyname, cname, parent_cname, init_func, destroy_func, ...) \
-  _PYFRIDA_DEFINE_TYPE_SLOTS (cname, __VA_ARGS__); \
-  _PYFRIDA_DEFINE_TYPE_SPEC (cname, pyname, Py_TPFLAGS_DEFAULT); \
-  static PyGObjectType _PYFRIDA_TYPE_VAR (cname, type) = \
+#define PYTELCO_DEFINE_TYPE(pyname, cname, parent_cname, init_func, destroy_func, ...) \
+  _PYTELCO_DEFINE_TYPE_SLOTS (cname, __VA_ARGS__); \
+  _PYTELCO_DEFINE_TYPE_SPEC (cname, pyname, Py_TPFLAGS_DEFAULT); \
+  static PyGObjectType _PYTELCO_TYPE_VAR (cname, type) = \
   { \
-    .parent = PYFRIDA_TYPE (parent_cname), \
+    .parent = PYTELCO_TYPE (parent_cname), \
     .object = NULL, \
     .init_from_handle = (PyGObjectInitFromHandleFunc) init_func, \
     .destroy = destroy_func, \
   }
-#define PYFRIDA_REGISTER_TYPE(cname, gtype) \
+#define PYTELCO_REGISTER_TYPE(cname, gtype) \
   G_BEGIN_DECLS \
   { \
-    PyGObjectType * t = PYFRIDA_TYPE (cname); \
-    t->object = PyType_FromSpecWithBases (&_PYFRIDA_TYPE_VAR (cname, spec), \
+    PyGObjectType * t = PYTELCO_TYPE (cname); \
+    t->object = PyType_FromSpecWithBases (&_PYTELCO_TYPE_VAR (cname, spec), \
         (t->parent != NULL) ? PyTuple_Pack (1, t->parent->object) : NULL); \
     PyGObject_register_type (gtype, t); \
     Py_INCREF (t->object); \
     PyModule_AddObject (module, G_STRINGIFY (cname), t->object); \
   } \
   G_END_DECLS
-#define _PYFRIDA_DEFINE_TYPE_SPEC(cname, pyname, type_flags) \
-  static PyType_Spec _PYFRIDA_TYPE_VAR (cname, spec) = \
+#define _PYTELCO_DEFINE_TYPE_SPEC(cname, pyname, type_flags) \
+  static PyType_Spec _PYTELCO_TYPE_VAR (cname, spec) = \
   { \
     .name = pyname, \
     .basicsize = sizeof (G_PASTE (Py, cname)), \
     .itemsize = 0, \
     .flags = type_flags, \
-    .slots = _PYFRIDA_TYPE_VAR (cname, slots), \
+    .slots = _PYTELCO_TYPE_VAR (cname, slots), \
   }
-#define _PYFRIDA_DEFINE_TYPE_SLOTS(cname, ...) \
-  static PyType_Slot _PYFRIDA_TYPE_VAR (cname, slots)[] = \
+#define _PYTELCO_DEFINE_TYPE_SLOTS(cname, ...) \
+  static PyType_Slot _PYTELCO_TYPE_VAR (cname, slots)[] = \
   { \
     __VA_ARGS__ \
     { 0 }, \
@@ -120,7 +120,7 @@
 #define PY_GOBJECT_HANDLE(o) (PY_GOBJECT (o)->handle)
 #define PY_GOBJECT_SIGNAL_CLOSURE(o) ((PyGObjectSignalClosure *) (o))
 
-#define FRIDA_FUNCPTR_TO_POINTER(f) (GSIZE_TO_POINTER (f))
+#define TELCO_FUNCPTR_TO_POINTER(f) (GSIZE_TO_POINTER (f))
 
 static volatile gint toplevel_objects_alive = 0;
 
@@ -132,7 +132,7 @@ static PyObject * datetime_constructor;
 static initproc PyGObject_tp_init;
 static destructor PyGObject_tp_dealloc;
 static GHashTable * pygobject_type_spec_by_type;
-static GHashTable * frida_exception_by_error_code;
+static GHashTable * telco_exception_by_error_code;
 static PyObject * cancelled_exception;
 
 typedef struct _PyGObject                      PyGObject;
@@ -157,8 +157,8 @@ typedef struct _PyFileMonitor                  PyFileMonitor;
 typedef struct _PyIOStream                     PyIOStream;
 typedef struct _PyCancellable                  PyCancellable;
 
-#define FRIDA_TYPE_PYTHON_AUTHENTICATION_SERVICE (frida_python_authentication_service_get_type ())
-G_DECLARE_FINAL_TYPE (FridaPythonAuthenticationService, frida_python_authentication_service, FRIDA, PYTHON_AUTHENTICATION_SERVICE, GObject)
+#define TELCO_TYPE_PYTHON_AUTHENTICATION_SERVICE (telco_python_authentication_service_get_type ())
+G_DECLARE_FINAL_TYPE (TelcoPythonAuthenticationService, telco_python_authentication_service, TELCO, PYTHON_AUTHENTICATION_SERVICE, GObject)
 
 typedef void (* PyGObjectInitFromHandleFunc) (PyObject * self, gpointer handle);
 
@@ -289,7 +289,7 @@ struct _PyEndpointParameters
   PyGObject parent;
 };
 
-struct _FridaPythonAuthenticationService
+struct _TelcoPythonAuthenticationService
 {
   GObject parent;
   PyObject * callback;
@@ -357,25 +357,25 @@ static int PyDeviceManager_init (PyDeviceManager * self, PyObject * args, PyObje
 static void PyDeviceManager_dealloc (PyDeviceManager * self);
 static PyObject * PyDeviceManager_close (PyDeviceManager * self);
 static PyObject * PyDeviceManager_get_device_matching (PyDeviceManager * self, PyObject * args);
-static gboolean PyDeviceManager_is_matching_device (FridaDevice * device, PyObject * predicate);
+static gboolean PyDeviceManager_is_matching_device (TelcoDevice * device, PyObject * predicate);
 static PyObject * PyDeviceManager_enumerate_devices (PyDeviceManager * self);
 static PyObject * PyDeviceManager_add_remote_device (PyDeviceManager * self, PyObject * args, PyObject * kw);
 static PyObject * PyDeviceManager_remove_remote_device (PyDeviceManager * self, PyObject * args, PyObject * kw);
-static FridaRemoteDeviceOptions * PyDeviceManager_parse_remote_device_options (const gchar * certificate_value, const gchar * origin,
+static TelcoRemoteDeviceOptions * PyDeviceManager_parse_remote_device_options (const gchar * certificate_value, const gchar * origin,
     const gchar * token, gint keepalive_interval);
 
-static PyObject * PyDevice_new_take_handle (FridaDevice * handle);
+static PyObject * PyDevice_new_take_handle (TelcoDevice * handle);
 static int PyDevice_init (PyDevice * self, PyObject * args, PyObject * kw);
-static void PyDevice_init_from_handle (PyDevice * self, FridaDevice * handle);
+static void PyDevice_init_from_handle (PyDevice * self, TelcoDevice * handle);
 static void PyDevice_dealloc (PyDevice * self);
 static PyObject * PyDevice_repr (PyDevice * self);
 static PyObject * PyDevice_is_lost (PyDevice * self);
 static PyObject * PyDevice_query_system_parameters (PyDevice * self);
 static PyObject * PyDevice_get_frontmost_application (PyDevice * self, PyObject * args, PyObject * kw);
 static PyObject * PyDevice_enumerate_applications (PyDevice * self, PyObject * args, PyObject * kw);
-static FridaApplicationQueryOptions * PyDevice_parse_application_query_options (PyObject * identifiers_value, const gchar * scope_value);
+static TelcoApplicationQueryOptions * PyDevice_parse_application_query_options (PyObject * identifiers_value, const gchar * scope_value);
 static PyObject * PyDevice_enumerate_processes (PyDevice * self, PyObject * args, PyObject * kw);
-static FridaProcessQueryOptions * PyDevice_parse_process_query_options (PyObject * pids_value, const gchar * scope_value);
+static TelcoProcessQueryOptions * PyDevice_parse_process_query_options (PyObject * pids_value, const gchar * scope_value);
 static PyObject * PyDevice_enable_spawn_gating (PyDevice * self);
 static PyObject * PyDevice_disable_spawn_gating (PyDevice * self);
 static PyObject * PyDevice_enumerate_pending_spawn (PyDevice * self);
@@ -385,50 +385,50 @@ static PyObject * PyDevice_input (PyDevice * self, PyObject * args);
 static PyObject * PyDevice_resume (PyDevice * self, PyObject * args);
 static PyObject * PyDevice_kill (PyDevice * self, PyObject * args);
 static PyObject * PyDevice_attach (PyDevice * self, PyObject * args, PyObject * kw);
-static FridaSessionOptions * PyDevice_parse_session_options (const gchar * realm_value, guint persist_timeout);
+static TelcoSessionOptions * PyDevice_parse_session_options (const gchar * realm_value, guint persist_timeout);
 static PyObject * PyDevice_inject_library_file (PyDevice * self, PyObject * args);
 static PyObject * PyDevice_inject_library_blob (PyDevice * self, PyObject * args);
 static PyObject * PyDevice_open_channel (PyDevice * self, PyObject * args);
 static PyObject * PyDevice_unpair (PyDevice * self);
 
-static PyObject * PyApplication_new_take_handle (FridaApplication * handle);
+static PyObject * PyApplication_new_take_handle (TelcoApplication * handle);
 static int PyApplication_init (PyApplication * self, PyObject * args, PyObject * kw);
-static void PyApplication_init_from_handle (PyApplication * self, FridaApplication * handle);
+static void PyApplication_init_from_handle (PyApplication * self, TelcoApplication * handle);
 static void PyApplication_dealloc (PyApplication * self);
 static PyObject * PyApplication_repr (PyApplication * self);
 static PyObject * PyApplication_marshal_parameters_dict (GHashTable * dict);
 
-static PyObject * PyProcess_new_take_handle (FridaProcess * handle);
+static PyObject * PyProcess_new_take_handle (TelcoProcess * handle);
 static int PyProcess_init (PyProcess * self, PyObject * args, PyObject * kw);
-static void PyProcess_init_from_handle (PyProcess * self, FridaProcess * handle);
+static void PyProcess_init_from_handle (PyProcess * self, TelcoProcess * handle);
 static void PyProcess_dealloc (PyProcess * self);
 static PyObject * PyProcess_repr (PyProcess * self);
 static PyObject * PyProcess_marshal_parameters_dict (GHashTable * dict);
 
-static PyObject * PySpawn_new_take_handle (FridaSpawn * handle);
+static PyObject * PySpawn_new_take_handle (TelcoSpawn * handle);
 static int PySpawn_init (PySpawn * self, PyObject * args, PyObject * kw);
-static void PySpawn_init_from_handle (PySpawn * self, FridaSpawn * handle);
+static void PySpawn_init_from_handle (PySpawn * self, TelcoSpawn * handle);
 static void PySpawn_dealloc (PySpawn * self);
 static PyObject * PySpawn_repr (PySpawn * self);
 
-static PyObject * PyChild_new_take_handle (FridaChild * handle);
+static PyObject * PyChild_new_take_handle (TelcoChild * handle);
 static int PyChild_init (PyChild * self, PyObject * args, PyObject * kw);
-static void PyChild_init_from_handle (PyChild * self, FridaChild * handle);
+static void PyChild_init_from_handle (PyChild * self, TelcoChild * handle);
 static void PyChild_dealloc (PyChild * self);
 static PyObject * PyChild_repr (PyChild * self);
 
 static int PyCrash_init (PyCrash * self, PyObject * args, PyObject * kw);
-static void PyCrash_init_from_handle (PyCrash * self, FridaCrash * handle);
+static void PyCrash_init_from_handle (PyCrash * self, TelcoCrash * handle);
 static void PyCrash_dealloc (PyCrash * self);
 static PyObject * PyCrash_repr (PyCrash * self);
 
-static PyObject * PyBus_new_take_handle (FridaBus * handle);
+static PyObject * PyBus_new_take_handle (TelcoBus * handle);
 static PyObject * PyBus_attach (PySession * self);
 static PyObject * PyBus_post (PyScript * self, PyObject * args, PyObject * kw);
 
-static PyObject * PySession_new_take_handle (FridaSession * handle);
+static PyObject * PySession_new_take_handle (TelcoSession * handle);
 static int PySession_init (PySession * self, PyObject * args, PyObject * kw);
-static void PySession_init_from_handle (PySession * self, FridaSession * handle);
+static void PySession_init_from_handle (PySession * self, TelcoSession * handle);
 static PyObject * PySession_repr (PySession * self);
 static PyObject * PySession_is_detached (PySession * self);
 static PyObject * PySession_detach (PySession * self);
@@ -439,16 +439,16 @@ static PyObject * PySession_create_script (PySession * self, PyObject * args, Py
 static PyObject * PySession_create_script_from_bytes (PySession * self, PyObject * args, PyObject * kw);
 static PyObject * PySession_compile_script (PySession * self, PyObject * args, PyObject * kw);
 static PyObject * PySession_snapshot_script (PySession * self, PyObject * args, PyObject * kw);
-static FridaScriptOptions * PySession_parse_script_options (const gchar * name, gconstpointer snapshot_data, gsize snapshot_size,
+static TelcoScriptOptions * PySession_parse_script_options (const gchar * name, gconstpointer snapshot_data, gsize snapshot_size,
     const gchar * runtime_value);
 static PyObject * PySession_snapshot_script (PySession * self, PyObject * args, PyObject * kw);
-static FridaSnapshotOptions * PySession_parse_snapshot_options (const gchar * warmup_script, const gchar * runtime_value);
+static TelcoSnapshotOptions * PySession_parse_snapshot_options (const gchar * warmup_script, const gchar * runtime_value);
 static PyObject * PySession_setup_peer_connection (PySession * self, PyObject * args, PyObject * kw);
-static FridaPeerOptions * PySession_parse_peer_options (const gchar * stun_server, PyObject * relays);
+static TelcoPeerOptions * PySession_parse_peer_options (const gchar * stun_server, PyObject * relays);
 static PyObject * PySession_join_portal (PySession * self, PyObject * args, PyObject * kw);
-static FridaPortalOptions * PySession_parse_portal_options (const gchar * certificate_value, const gchar * token, PyObject * acl_value);
+static TelcoPortalOptions * PySession_parse_portal_options (const gchar * certificate_value, const gchar * token, PyObject * acl_value);
 
-static PyObject * PyScript_new_take_handle (FridaScript * handle);
+static PyObject * PyScript_new_take_handle (TelcoScript * handle);
 static PyObject * PyScript_is_destroyed (PyScript * self);
 static PyObject * PyScript_load (PyScript * self);
 static PyObject * PyScript_unload (PyScript * self);
@@ -458,15 +458,15 @@ static PyObject * PyScript_enable_debugger (PyScript * self, PyObject * args, Py
 static PyObject * PyScript_disable_debugger (PyScript * self);
 
 static int PyRelay_init (PyRelay * self, PyObject * args, PyObject * kw);
-static void PyRelay_init_from_handle (PyRelay * self, FridaRelay * handle);
+static void PyRelay_init_from_handle (PyRelay * self, TelcoRelay * handle);
 static void PyRelay_dealloc (PyRelay * self);
 static PyObject * PyRelay_repr (PyRelay * self);
 
-static PyObject * PyPortalMembership_new_take_handle (FridaPortalMembership * handle);
+static PyObject * PyPortalMembership_new_take_handle (TelcoPortalMembership * handle);
 static PyObject * PyPortalMembership_terminate (PyPortalMembership * self);
 
 static int PyPortalService_init (PyPortalService * self, PyObject * args, PyObject * kw);
-static void PyPortalService_init_from_handle (PyPortalService * self, FridaPortalService * handle);
+static void PyPortalService_init_from_handle (PyPortalService * self, TelcoPortalService * handle);
 static void PyPortalService_dealloc (PyPortalService * self);
 static PyObject * PyPortalService_start (PyPortalService * self);
 static PyObject * PyPortalService_stop (PyPortalService * self);
@@ -480,19 +480,19 @@ static PyObject * PyPortalService_untag (PyScript * self, PyObject * args, PyObj
 
 static int PyEndpointParameters_init (PyEndpointParameters * self, PyObject * args, PyObject * kw);
 
-static FridaPythonAuthenticationService * frida_python_authentication_service_new (PyObject * callback);
-static void frida_python_authentication_service_iface_init (gpointer g_iface, gpointer iface_data);
-static void frida_python_authentication_service_dispose (GObject * object);
-static void frida_python_authentication_service_authenticate (FridaAuthenticationService * service, const gchar * token,
+static TelcoPythonAuthenticationService * telco_python_authentication_service_new (PyObject * callback);
+static void telco_python_authentication_service_iface_init (gpointer g_iface, gpointer iface_data);
+static void telco_python_authentication_service_dispose (GObject * object);
+static void telco_python_authentication_service_authenticate (TelcoAuthenticationService * service, const gchar * token,
     GCancellable * cancellable, GAsyncReadyCallback callback, gpointer user_data);
-static gchar * frida_python_authentication_service_authenticate_finish (FridaAuthenticationService * service, GAsyncResult * result,
+static gchar * telco_python_authentication_service_authenticate_finish (TelcoAuthenticationService * service, GAsyncResult * result,
     GError ** error);
-static void frida_python_authentication_service_do_authenticate (GTask * task, FridaPythonAuthenticationService * self);
+static void telco_python_authentication_service_do_authenticate (GTask * task, TelcoPythonAuthenticationService * self);
 
 static int PyCompiler_init (PyCompiler * self, PyObject * args, PyObject * kw);
 static PyObject * PyCompiler_build (PyCompiler * self, PyObject * args, PyObject * kw);
 static PyObject * PyCompiler_watch (PyCompiler * self, PyObject * args, PyObject * kw);
-static gboolean PyCompiler_set_options (FridaCompilerOptions * options, const gchar * project_root_value, const gchar * source_maps_value,
+static gboolean PyCompiler_set_options (TelcoCompilerOptions * options, const gchar * project_root_value, const gchar * source_maps_value,
     const gchar * compression_value);
 
 static int PyFileMonitor_init (PyFileMonitor * self, PyObject * args, PyObject * kw);
@@ -525,10 +525,10 @@ static void PyCancellable_on_cancelled (GCancellable * cancellable, PyObject * c
 static void PyCancellable_destroy_callback (PyObject * callback);
 static PyObject * PyCancellable_cancel (PyCancellable * self);
 
-static PyObject * PyFrida_raise (GError * error);
-static gboolean PyFrida_is_string (PyObject * obj);
-static gchar * PyFrida_repr (PyObject * obj);
-static guint PyFrida_get_max_argument_count (PyObject * callable);
+static PyObject * PyTelco_raise (GError * error);
+static gboolean PyTelco_is_string (PyObject * obj);
+static gchar * PyTelco_repr (PyObject * obj);
+static guint PyTelco_get_max_argument_count (PyObject * callable);
 
 static PyMethodDef PyGObject_methods[] =
 {
@@ -742,22 +742,22 @@ static PyMethodDef PyCancellable_methods[] =
   { NULL }
 };
 
-PYFRIDA_DEFINE_BASETYPE ("_frida.Object", GObject, NULL, g_object_unref,
-  { Py_tp_doc, "Frida Object" },
+PYTELCO_DEFINE_BASETYPE ("_telco.Object", GObject, NULL, g_object_unref,
+  { Py_tp_doc, "Telco Object" },
   { Py_tp_init, PyGObject_init },
   { Py_tp_dealloc, PyGObject_dealloc },
   { Py_tp_methods, PyGObject_methods },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.DeviceManager", DeviceManager, GObject, NULL, frida_unref,
-  { Py_tp_doc, "Frida Device Manager" },
+PYTELCO_DEFINE_TYPE ("_telco.DeviceManager", DeviceManager, GObject, NULL, telco_unref,
+  { Py_tp_doc, "Telco Device Manager" },
   { Py_tp_init, PyDeviceManager_init },
   { Py_tp_dealloc, PyDeviceManager_dealloc },
   { Py_tp_methods, PyDeviceManager_methods },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.Device", Device, GObject, PyDevice_init_from_handle, frida_unref,
-  { Py_tp_doc, "Frida Device" },
+PYTELCO_DEFINE_TYPE ("_telco.Device", Device, GObject, PyDevice_init_from_handle, telco_unref,
+  { Py_tp_doc, "Telco Device" },
   { Py_tp_init, PyDevice_init },
   { Py_tp_dealloc, PyDevice_dealloc },
   { Py_tp_repr, PyDevice_repr },
@@ -765,111 +765,111 @@ PYFRIDA_DEFINE_TYPE ("_frida.Device", Device, GObject, PyDevice_init_from_handle
   { Py_tp_members, PyDevice_members },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.Application", Application, GObject, PyApplication_init_from_handle, g_object_unref,
-  { Py_tp_doc, "Frida Application" },
+PYTELCO_DEFINE_TYPE ("_telco.Application", Application, GObject, PyApplication_init_from_handle, g_object_unref,
+  { Py_tp_doc, "Telco Application" },
   { Py_tp_init, PyApplication_init },
   { Py_tp_dealloc, PyApplication_dealloc },
   { Py_tp_repr, PyApplication_repr },
   { Py_tp_members, PyApplication_members },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.Process", Process, GObject, PyProcess_init_from_handle, g_object_unref,
-  { Py_tp_doc, "Frida Process" },
+PYTELCO_DEFINE_TYPE ("_telco.Process", Process, GObject, PyProcess_init_from_handle, g_object_unref,
+  { Py_tp_doc, "Telco Process" },
   { Py_tp_init, PyProcess_init },
   { Py_tp_dealloc, PyProcess_dealloc },
   { Py_tp_repr, PyProcess_repr },
   { Py_tp_members, PyProcess_members },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.Spawn", Spawn, GObject, PySpawn_init_from_handle, g_object_unref,
-  { Py_tp_doc, "Frida Spawn" },
+PYTELCO_DEFINE_TYPE ("_telco.Spawn", Spawn, GObject, PySpawn_init_from_handle, g_object_unref,
+  { Py_tp_doc, "Telco Spawn" },
   { Py_tp_init, PySpawn_init },
   { Py_tp_dealloc, PySpawn_dealloc },
   { Py_tp_repr, PySpawn_repr },
   { Py_tp_members, PySpawn_members },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.Child", Child, GObject, PyChild_init_from_handle, g_object_unref,
-  { Py_tp_doc, "Frida Child" },
+PYTELCO_DEFINE_TYPE ("_telco.Child", Child, GObject, PyChild_init_from_handle, g_object_unref,
+  { Py_tp_doc, "Telco Child" },
   { Py_tp_init, PyChild_init },
   { Py_tp_dealloc, PyChild_dealloc },
   { Py_tp_repr, PyChild_repr },
   { Py_tp_members, PyChild_members },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.Crash", Crash, GObject, PyCrash_init_from_handle, g_object_unref,
-  { Py_tp_doc, "Frida Crash Details" },
+PYTELCO_DEFINE_TYPE ("_telco.Crash", Crash, GObject, PyCrash_init_from_handle, g_object_unref,
+  { Py_tp_doc, "Telco Crash Details" },
   { Py_tp_init, PyCrash_init },
   { Py_tp_dealloc, PyCrash_dealloc },
   { Py_tp_repr, PyCrash_repr },
   { Py_tp_members, PyCrash_members },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.Bus", Bus, GObject, NULL, g_object_unref,
-  { Py_tp_doc, "Frida Message Bus" },
+PYTELCO_DEFINE_TYPE ("_telco.Bus", Bus, GObject, NULL, g_object_unref,
+  { Py_tp_doc, "Telco Message Bus" },
   { Py_tp_methods, PyBus_methods },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.Session", Session, GObject, PySession_init_from_handle, frida_unref,
-  { Py_tp_doc, "Frida Session" },
+PYTELCO_DEFINE_TYPE ("_telco.Session", Session, GObject, PySession_init_from_handle, telco_unref,
+  { Py_tp_doc, "Telco Session" },
   { Py_tp_init, PySession_init },
   { Py_tp_repr, PySession_repr },
   { Py_tp_methods, PySession_methods },
   { Py_tp_members, PySession_members },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.Script", Script, GObject, NULL, frida_unref,
-  { Py_tp_doc, "Frida Script" },
+PYTELCO_DEFINE_TYPE ("_telco.Script", Script, GObject, NULL, telco_unref,
+  { Py_tp_doc, "Telco Script" },
   { Py_tp_methods, PyScript_methods },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.Relay", Relay, GObject, PyRelay_init_from_handle, g_object_unref,
-  { Py_tp_doc, "Frida Relay" },
+PYTELCO_DEFINE_TYPE ("_telco.Relay", Relay, GObject, PyRelay_init_from_handle, g_object_unref,
+  { Py_tp_doc, "Telco Relay" },
   { Py_tp_init, PyRelay_init },
   { Py_tp_dealloc, PyRelay_dealloc },
   { Py_tp_repr, PyRelay_repr },
   { Py_tp_members, PyRelay_members },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.PortalMembership", PortalMembership, GObject, NULL, frida_unref,
-  { Py_tp_doc, "Frida Portal Membership" },
+PYTELCO_DEFINE_TYPE ("_telco.PortalMembership", PortalMembership, GObject, NULL, telco_unref,
+  { Py_tp_doc, "Telco Portal Membership" },
   { Py_tp_methods, PyPortalMembership_methods },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.PortalService", PortalService, GObject, PyPortalService_init_from_handle, frida_unref,
-  { Py_tp_doc, "Frida Portal Service" },
+PYTELCO_DEFINE_TYPE ("_telco.PortalService", PortalService, GObject, PyPortalService_init_from_handle, telco_unref,
+  { Py_tp_doc, "Telco Portal Service" },
   { Py_tp_init, PyPortalService_init },
   { Py_tp_dealloc, PyPortalService_dealloc },
   { Py_tp_methods, PyPortalService_methods },
   { Py_tp_members, PyPortalService_members },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.EndpointParameters", EndpointParameters, GObject, NULL, g_object_unref,
-  { Py_tp_doc, "Frida EndpointParameters" },
+PYTELCO_DEFINE_TYPE ("_telco.EndpointParameters", EndpointParameters, GObject, NULL, g_object_unref,
+  { Py_tp_doc, "Telco EndpointParameters" },
   { Py_tp_init, PyEndpointParameters_init },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.Compiler", Compiler, GObject, NULL, frida_unref,
-  { Py_tp_doc, "Frida File Monitor" },
+PYTELCO_DEFINE_TYPE ("_telco.Compiler", Compiler, GObject, NULL, telco_unref,
+  { Py_tp_doc, "Telco File Monitor" },
   { Py_tp_init, PyCompiler_init },
   { Py_tp_methods, PyCompiler_methods },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.FileMonitor", FileMonitor, GObject, NULL, frida_unref,
-  { Py_tp_doc, "Frida File Monitor" },
+PYTELCO_DEFINE_TYPE ("_telco.FileMonitor", FileMonitor, GObject, NULL, telco_unref,
+  { Py_tp_doc, "Telco File Monitor" },
   { Py_tp_init, PyFileMonitor_init },
   { Py_tp_methods, PyFileMonitor_methods },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.IOStream", IOStream, GObject, PyIOStream_init_from_handle, g_object_unref,
-  { Py_tp_doc, "Frida IOStream" },
+PYTELCO_DEFINE_TYPE ("_telco.IOStream", IOStream, GObject, PyIOStream_init_from_handle, g_object_unref,
+  { Py_tp_doc, "Telco IOStream" },
   { Py_tp_init, PyIOStream_init },
   { Py_tp_repr, PyIOStream_repr },
   { Py_tp_methods, PyIOStream_methods },
 );
 
-PYFRIDA_DEFINE_TYPE ("_frida.Cancellable", Cancellable, GObject, NULL, g_object_unref,
-  { Py_tp_doc, "Frida Cancellable" },
+PYTELCO_DEFINE_TYPE ("_telco.Cancellable", Cancellable, GObject, NULL, g_object_unref,
+  { Py_tp_doc, "Telco Cancellable" },
   { Py_tp_init, PyCancellable_init },
   { Py_tp_repr, PyCancellable_repr },
   { Py_tp_methods, PyCancellable_methods },
@@ -912,7 +912,7 @@ static int
 PyGObject_init (PyGObject * self)
 {
   self->handle = NULL;
-  self->type = PYFRIDA_TYPE (GObject);
+  self->type = PYTELCO_TYPE (GObject);
 
   self->signal_closures = NULL;
 
@@ -986,7 +986,7 @@ PyGObject_on (PyGObject * self, PyObject * args)
   if (!PyGObject_parse_signal_method_args (args, instance_type, &signal_id, &callback))
     return NULL;
 
-  max_arg_count = PyFrida_get_max_argument_count (callback);
+  max_arg_count = PyTelco_get_max_argument_count (callback);
   if (max_arg_count != G_MAXUINT)
   {
     g_signal_query (signal_id, &query);
@@ -1116,7 +1116,7 @@ invalid_signal_name:
 static const gchar *
 PyGObject_class_name_from_c (const gchar * cname)
 {
-  if (g_str_has_prefix (cname, "Frida"))
+  if (g_str_has_prefix (cname, "Telco"))
     return cname + 5;
 
   return cname;
@@ -1662,7 +1662,7 @@ PyGObject_marshal_variant (GVariant * variant)
 static gboolean
 PyGObject_unmarshal_variant (PyObject * value, GVariant ** variant)
 {
-  if (PyFrida_is_string (value))
+  if (PyTelco_is_string (value))
   {
     gchar * str;
 
@@ -1754,7 +1754,7 @@ PyGObject_marshal_object (gpointer handle, GType type)
 
   pytype = g_hash_table_lookup (pygobject_type_spec_by_type, GSIZE_TO_POINTER (type));
   if (pytype == NULL)
-    pytype = PYFRIDA_TYPE (GObject);
+    pytype = PYTELCO_TYPE (GObject);
 
   if (G_IS_SOCKET_ADDRESS (handle))
     return PyGObject_marshal_socket_address (handle);
@@ -1821,7 +1821,7 @@ PyGObject_marshal_socket_address (GSocketAddress * address)
   }
 
   if (result == NULL)
-    result = PyGObject_new_take_handle (g_object_ref (address), PYFRIDA_TYPE (GObject));
+    result = PyGObject_new_take_handle (g_object_ref (address), PYTELCO_TYPE (GObject));
 
   return result;
 }
@@ -1842,7 +1842,7 @@ PyGObject_unmarshal_certificate (const gchar * str, GTlsCertificate ** certifica
 
 propagate_error:
   {
-    PyFrida_raise (g_error_new_literal (FRIDA_ERROR, FRIDA_ERROR_INVALID_ARGUMENT, error->message));
+    PyTelco_raise (g_error_new_literal (TELCO_ERROR, TELCO_ERROR_INVALID_ARGUMENT, error->message));
     g_error_free (error);
 
     return FALSE;
@@ -1858,7 +1858,7 @@ PyDeviceManager_init (PyDeviceManager * self, PyObject * args, PyObject * kw)
 
   g_atomic_int_inc (&toplevel_objects_alive);
 
-  PyGObject_take_handle (&self->parent, frida_device_manager_new (), PYFRIDA_TYPE (DeviceManager));
+  PyGObject_take_handle (&self->parent, telco_device_manager_new (), PYTELCO_TYPE (DeviceManager));
 
   return 0;
 }
@@ -1866,7 +1866,7 @@ PyDeviceManager_init (PyDeviceManager * self, PyObject * args, PyObject * kw)
 static void
 PyDeviceManager_dealloc (PyDeviceManager * self)
 {
-  FridaDeviceManager * handle;
+  TelcoDeviceManager * handle;
 
   g_atomic_int_dec_and_test (&toplevel_objects_alive);
 
@@ -1874,8 +1874,8 @@ PyDeviceManager_dealloc (PyDeviceManager * self)
   if (handle != NULL)
   {
     Py_BEGIN_ALLOW_THREADS
-    frida_device_manager_close_sync (handle, NULL, NULL);
-    frida_unref (handle);
+    telco_device_manager_close_sync (handle, NULL, NULL);
+    telco_unref (handle);
     Py_END_ALLOW_THREADS
   }
 
@@ -1888,10 +1888,10 @@ PyDeviceManager_close (PyDeviceManager * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_device_manager_close_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_device_manager_close_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -1902,7 +1902,7 @@ PyDeviceManager_get_device_matching (PyDeviceManager * self, PyObject * args)
   PyObject * predicate;
   gint timeout;
   GError * error = NULL;
-  FridaDevice * result;
+  TelcoDevice * result;
 
   if (!PyArg_ParseTuple (args, "Oi", &predicate, &timeout))
     return NULL;
@@ -1911,11 +1911,11 @@ PyDeviceManager_get_device_matching (PyDeviceManager * self, PyObject * args)
     goto not_callable;
 
   Py_BEGIN_ALLOW_THREADS
-  result = frida_device_manager_get_device_sync (PY_GOBJECT_HANDLE (self), (FridaDeviceManagerPredicate) PyDeviceManager_is_matching_device,
+  result = telco_device_manager_get_device_sync (PY_GOBJECT_HANDLE (self), (TelcoDeviceManagerPredicate) PyDeviceManager_is_matching_device,
       predicate, timeout, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   return PyDevice_new_take_handle (result);
 
@@ -1927,7 +1927,7 @@ not_callable:
 }
 
 static gboolean
-PyDeviceManager_is_matching_device (FridaDevice * device, PyObject * predicate)
+PyDeviceManager_is_matching_device (TelcoDevice * device, PyObject * predicate)
 {
   gboolean is_matching = FALSE;
   PyGILState_STATE gstate;
@@ -1960,23 +1960,23 @@ static PyObject *
 PyDeviceManager_enumerate_devices (PyDeviceManager * self)
 {
   GError * error = NULL;
-  FridaDeviceList * result;
+  TelcoDeviceList * result;
   gint result_length, i;
   PyObject * devices;
 
   Py_BEGIN_ALLOW_THREADS
-  result = frida_device_manager_enumerate_devices_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  result = telco_device_manager_enumerate_devices_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
-  result_length = frida_device_list_size (result);
+  result_length = telco_device_list_size (result);
   devices = PyList_New (result_length);
   for (i = 0; i != result_length; i++)
   {
-    PyList_SetItem (devices, i, PyDevice_new_take_handle (frida_device_list_get (result, i)));
+    PyList_SetItem (devices, i, PyDevice_new_take_handle (telco_device_list_get (result, i)));
   }
-  frida_unref (result);
+  telco_unref (result);
 
   return devices;
 }
@@ -1991,9 +1991,9 @@ PyDeviceManager_add_remote_device (PyDeviceManager * self, PyObject * args, PyOb
   char * origin = NULL;
   char * token = NULL;
   int keepalive_interval = -1;
-  FridaRemoteDeviceOptions * options;
+  TelcoRemoteDeviceOptions * options;
   GError * error = NULL;
-  FridaDevice * handle;
+  TelcoDevice * handle;
 
   if (!PyArg_ParseTupleAndKeywords (args, kw, "es|esesesi", keywords,
         "utf-8", &address,
@@ -2008,12 +2008,12 @@ PyDeviceManager_add_remote_device (PyDeviceManager * self, PyObject * args, PyOb
     goto beach;
 
   Py_BEGIN_ALLOW_THREADS
-  handle = frida_device_manager_add_remote_device_sync (PY_GOBJECT_HANDLE (self), address, options, g_cancellable_get_current (), &error);
+  handle = telco_device_manager_add_remote_device_sync (PY_GOBJECT_HANDLE (self), address, options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   result = (error == NULL)
       ? PyDevice_new_take_handle (handle)
-      : PyFrida_raise (error);
+      : PyTelco_raise (error);
 
 beach:
   g_clear_object (&options);
@@ -2037,24 +2037,24 @@ PyDeviceManager_remove_remote_device (PyDeviceManager * self, PyObject * args, P
     return NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_device_manager_remove_remote_device_sync (PY_GOBJECT_HANDLE (self), address, g_cancellable_get_current (), &error);
+  telco_device_manager_remove_remote_device_sync (PY_GOBJECT_HANDLE (self), address, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   PyMem_Free (address);
 
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
 
-static FridaRemoteDeviceOptions *
+static TelcoRemoteDeviceOptions *
 PyDeviceManager_parse_remote_device_options (const gchar * certificate_value, const gchar * origin, const gchar * token,
     gint keepalive_interval)
 {
-  FridaRemoteDeviceOptions * options;
+  TelcoRemoteDeviceOptions * options;
 
-  options = frida_remote_device_options_new ();
+  options = telco_remote_device_options_new ();
 
   if (certificate_value != NULL)
   {
@@ -2063,19 +2063,19 @@ PyDeviceManager_parse_remote_device_options (const gchar * certificate_value, co
     if (!PyGObject_unmarshal_certificate (certificate_value, &certificate))
       goto propagate_error;
 
-    frida_remote_device_options_set_certificate (options, certificate);
+    telco_remote_device_options_set_certificate (options, certificate);
 
     g_object_unref (certificate);
   }
 
   if (origin != NULL)
-    frida_remote_device_options_set_origin (options, origin);
+    telco_remote_device_options_set_origin (options, origin);
 
   if (token != NULL)
-    frida_remote_device_options_set_token (options, token);
+    telco_remote_device_options_set_token (options, token);
 
   if (keepalive_interval != -1)
-    frida_remote_device_options_set_keepalive_interval (options, keepalive_interval);
+    telco_remote_device_options_set_keepalive_interval (options, keepalive_interval);
 
   return options;
 
@@ -2089,9 +2089,9 @@ propagate_error:
 
 
 static PyObject *
-PyDevice_new_take_handle (FridaDevice * handle)
+PyDevice_new_take_handle (TelcoDevice * handle)
 {
-  return PyGObject_new_take_handle (handle, PYFRIDA_TYPE (Device));
+  return PyGObject_new_take_handle (handle, PYTELCO_TYPE (Device));
 }
 
 static int
@@ -2110,13 +2110,13 @@ PyDevice_init (PyDevice * self, PyObject * args, PyObject * kw)
 }
 
 static void
-PyDevice_init_from_handle (PyDevice * self, FridaDevice * handle)
+PyDevice_init_from_handle (PyDevice * self, TelcoDevice * handle)
 {
   GVariant * icon;
 
-  self->id = PyUnicode_FromUTF8String (frida_device_get_id (handle));
-  self->name = PyUnicode_FromUTF8String (frida_device_get_name (handle));
-  icon = frida_device_get_icon (handle);
+  self->id = PyUnicode_FromUTF8String (telco_device_get_id (handle));
+  self->name = PyUnicode_FromUTF8String (telco_device_get_name (handle));
+  icon = telco_device_get_icon (handle);
   if (icon != NULL)
   {
     self->icon = PyGObject_marshal_variant (icon);
@@ -2126,8 +2126,8 @@ PyDevice_init_from_handle (PyDevice * self, FridaDevice * handle)
     self->icon = Py_None;
     Py_IncRef (Py_None);
   }
-  self->type = PyGObject_marshal_enum (frida_device_get_dtype (handle), FRIDA_TYPE_DEVICE_TYPE);
-  self->bus = PyBus_new_take_handle (g_object_ref (frida_device_get_bus (handle)));
+  self->type = PyGObject_marshal_enum (telco_device_get_dtype (handle), TELCO_TYPE_DEVICE_TYPE);
+  self->bus = PyBus_new_take_handle (g_object_ref (telco_device_get_bus (handle)));
 }
 
 static void
@@ -2169,7 +2169,7 @@ PyDevice_is_lost (PyDevice * self)
   gboolean is_lost;
 
   Py_BEGIN_ALLOW_THREADS
-  is_lost = frida_device_is_lost (PY_GOBJECT_HANDLE (self));
+  is_lost = telco_device_is_lost (PY_GOBJECT_HANDLE (self));
   Py_END_ALLOW_THREADS
 
   return PyBool_FromLong (is_lost);
@@ -2183,10 +2183,10 @@ PyDevice_query_system_parameters (PyDevice * self)
   PyObject * parameters;
 
   Py_BEGIN_ALLOW_THREADS
-  result = frida_device_query_system_parameters_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  result = telco_device_query_system_parameters_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   parameters = PyGObject_marshal_parameters_dict (result);
   g_hash_table_unref (result);
@@ -2199,33 +2199,33 @@ PyDevice_get_frontmost_application (PyDevice * self, PyObject * args, PyObject *
 {
   static char * keywords[] = { "scope", NULL };
   const char * scope_value = NULL;
-  FridaFrontmostQueryOptions * options;
+  TelcoFrontmostQueryOptions * options;
   GError * error = NULL;
-  FridaApplication * result;
+  TelcoApplication * result;
 
   if (!PyArg_ParseTupleAndKeywords (args, kw, "|s", keywords, &scope_value))
     return NULL;
 
-  options = frida_frontmost_query_options_new ();
+  options = telco_frontmost_query_options_new ();
 
   if (scope_value != NULL)
   {
-    FridaScope scope;
+    TelcoScope scope;
 
-    if (!PyGObject_unmarshal_enum (scope_value, FRIDA_TYPE_SCOPE, &scope))
+    if (!PyGObject_unmarshal_enum (scope_value, TELCO_TYPE_SCOPE, &scope))
       goto invalid_argument;
 
-    frida_frontmost_query_options_set_scope (options, scope);
+    telco_frontmost_query_options_set_scope (options, scope);
   }
 
   Py_BEGIN_ALLOW_THREADS
-  result = frida_device_get_frontmost_application_sync (PY_GOBJECT_HANDLE (self), options, g_cancellable_get_current (), &error);
+  result = telco_device_get_frontmost_application_sync (PY_GOBJECT_HANDLE (self), options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   g_object_unref (options);
 
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   if (result != NULL)
     return PyApplication_new_take_handle (result);
@@ -2246,9 +2246,9 @@ PyDevice_enumerate_applications (PyDevice * self, PyObject * args, PyObject * kw
   static char * keywords[] = { "identifiers", "scope", NULL };
   PyObject * identifiers = NULL;
   const char * scope = NULL;
-  FridaApplicationQueryOptions * options;
+  TelcoApplicationQueryOptions * options;
   GError * error = NULL;
-  FridaApplicationList * result;
+  TelcoApplicationList * result;
   gint result_length, i;
   PyObject * applications;
 
@@ -2260,31 +2260,31 @@ PyDevice_enumerate_applications (PyDevice * self, PyObject * args, PyObject * kw
     return NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  result = frida_device_enumerate_applications_sync (PY_GOBJECT_HANDLE (self), options, g_cancellable_get_current (), &error);
+  result = telco_device_enumerate_applications_sync (PY_GOBJECT_HANDLE (self), options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   g_object_unref (options);
 
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
-  result_length = frida_application_list_size (result);
+  result_length = telco_application_list_size (result);
   applications = PyList_New (result_length);
   for (i = 0; i != result_length; i++)
   {
-    PyList_SetItem (applications, i, PyApplication_new_take_handle (frida_application_list_get (result, i)));
+    PyList_SetItem (applications, i, PyApplication_new_take_handle (telco_application_list_get (result, i)));
   }
   g_object_unref (result);
 
   return applications;
 }
 
-static FridaApplicationQueryOptions *
+static TelcoApplicationQueryOptions *
 PyDevice_parse_application_query_options (PyObject * identifiers_value, const gchar * scope_value)
 {
-  FridaApplicationQueryOptions * options;
+  TelcoApplicationQueryOptions * options;
 
-  options = frida_application_query_options_new ();
+  options = telco_application_query_options_new ();
 
   if (identifiers_value != NULL)
   {
@@ -2307,7 +2307,7 @@ PyDevice_parse_application_query_options (PyObject * identifiers_value, const gc
       if (identifier == NULL)
         goto propagate_error;
 
-      frida_application_query_options_select_identifier (options, identifier);
+      telco_application_query_options_select_identifier (options, identifier);
 
       g_free (identifier);
     }
@@ -2315,12 +2315,12 @@ PyDevice_parse_application_query_options (PyObject * identifiers_value, const gc
 
   if (scope_value != NULL)
   {
-    FridaScope scope;
+    TelcoScope scope;
 
-    if (!PyGObject_unmarshal_enum (scope_value, FRIDA_TYPE_SCOPE, &scope))
+    if (!PyGObject_unmarshal_enum (scope_value, TELCO_TYPE_SCOPE, &scope))
       goto propagate_error;
 
-    frida_application_query_options_set_scope (options, scope);
+    telco_application_query_options_set_scope (options, scope);
   }
 
   return options;
@@ -2339,9 +2339,9 @@ PyDevice_enumerate_processes (PyDevice * self, PyObject * args, PyObject * kw)
   static char * keywords[] = { "pids", "scope", NULL };
   PyObject * pids = NULL;
   const char * scope = NULL;
-  FridaProcessQueryOptions * options;
+  TelcoProcessQueryOptions * options;
   GError * error = NULL;
-  FridaProcessList * result;
+  TelcoProcessList * result;
   gint result_length, i;
   PyObject * processes;
 
@@ -2353,31 +2353,31 @@ PyDevice_enumerate_processes (PyDevice * self, PyObject * args, PyObject * kw)
     return NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  result = frida_device_enumerate_processes_sync (PY_GOBJECT_HANDLE (self), options, g_cancellable_get_current (), &error);
+  result = telco_device_enumerate_processes_sync (PY_GOBJECT_HANDLE (self), options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   g_object_unref (options);
 
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
-  result_length = frida_process_list_size (result);
+  result_length = telco_process_list_size (result);
   processes = PyList_New (result_length);
   for (i = 0; i != result_length; i++)
   {
-    PyList_SetItem (processes, i, PyProcess_new_take_handle (frida_process_list_get (result, i)));
+    PyList_SetItem (processes, i, PyProcess_new_take_handle (telco_process_list_get (result, i)));
   }
   g_object_unref (result);
 
   return processes;
 }
 
-static FridaProcessQueryOptions *
+static TelcoProcessQueryOptions *
 PyDevice_parse_process_query_options (PyObject * pids_value, const gchar * scope_value)
 {
-  FridaProcessQueryOptions * options;
+  TelcoProcessQueryOptions * options;
 
-  options = frida_process_query_options_new ();
+  options = telco_process_query_options_new ();
 
   if (pids_value != NULL)
   {
@@ -2400,18 +2400,18 @@ PyDevice_parse_process_query_options (PyObject * pids_value, const gchar * scope
       if (pid == -1)
         goto propagate_error;
 
-      frida_process_query_options_select_pid (options, pid);
+      telco_process_query_options_select_pid (options, pid);
     }
   }
 
   if (scope_value != NULL)
   {
-    FridaScope scope;
+    TelcoScope scope;
 
-    if (!PyGObject_unmarshal_enum (scope_value, FRIDA_TYPE_SCOPE, &scope))
+    if (!PyGObject_unmarshal_enum (scope_value, TELCO_TYPE_SCOPE, &scope))
       goto propagate_error;
 
-    frida_process_query_options_set_scope (options, scope);
+    telco_process_query_options_set_scope (options, scope);
   }
 
   return options;
@@ -2430,10 +2430,10 @@ PyDevice_enable_spawn_gating (PyDevice * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_device_enable_spawn_gating_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_device_enable_spawn_gating_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -2444,10 +2444,10 @@ PyDevice_disable_spawn_gating (PyDevice * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_device_disable_spawn_gating_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_device_disable_spawn_gating_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -2456,21 +2456,21 @@ static PyObject *
 PyDevice_enumerate_pending_spawn (PyDevice * self)
 {
   GError * error = NULL;
-  FridaSpawnList * result;
+  TelcoSpawnList * result;
   gint result_length, i;
   PyObject * spawn;
 
   Py_BEGIN_ALLOW_THREADS
-  result = frida_device_enumerate_pending_spawn_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  result = telco_device_enumerate_pending_spawn_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
-  result_length = frida_spawn_list_size (result);
+  result_length = telco_spawn_list_size (result);
   spawn = PyList_New (result_length);
   for (i = 0; i != result_length; i++)
   {
-    PyList_SetItem (spawn, i, PySpawn_new_take_handle (frida_spawn_list_get (result, i)));
+    PyList_SetItem (spawn, i, PySpawn_new_take_handle (telco_spawn_list_get (result, i)));
   }
   g_object_unref (result);
 
@@ -2481,21 +2481,21 @@ static PyObject *
 PyDevice_enumerate_pending_children (PyDevice * self)
 {
   GError * error = NULL;
-  FridaChildList * result;
+  TelcoChildList * result;
   gint result_length, i;
   PyObject * children;
 
   Py_BEGIN_ALLOW_THREADS
-  result = frida_device_enumerate_pending_children_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  result = telco_device_enumerate_pending_children_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
-  result_length = frida_child_list_size (result);
+  result_length = telco_child_list_size (result);
   children = PyList_New (result_length);
   for (i = 0; i != result_length; i++)
   {
-    PyList_SetItem (children, i, PyChild_new_take_handle (frida_child_list_get (result, i)));
+    PyList_SetItem (children, i, PyChild_new_take_handle (telco_child_list_get (result, i)));
   }
   g_object_unref (result);
 
@@ -2513,7 +2513,7 @@ PyDevice_spawn (PyDevice * self, PyObject * args, PyObject * kw)
   const char * cwd = NULL;
   const char * stdio_value = NULL;
   PyObject * aux_value = Py_None;
-  FridaSpawnOptions * options;
+  TelcoSpawnOptions * options;
   GError * error = NULL;
   guint pid;
 
@@ -2527,7 +2527,7 @@ PyDevice_spawn (PyDevice * self, PyObject * args, PyObject * kw)
       &aux_value))
     return NULL;
 
-  options = frida_spawn_options_new ();
+  options = telco_spawn_options_new ();
 
   if (argv_value != Py_None)
   {
@@ -2537,7 +2537,7 @@ PyDevice_spawn (PyDevice * self, PyObject * args, PyObject * kw)
     if (!PyGObject_unmarshal_strv (argv_value, &argv, &argv_length))
       goto invalid_argument;
 
-    frida_spawn_options_set_argv (options, argv, argv_length);
+    telco_spawn_options_set_argv (options, argv, argv_length);
 
     g_strfreev (argv);
   }
@@ -2550,7 +2550,7 @@ PyDevice_spawn (PyDevice * self, PyObject * args, PyObject * kw)
     if (!PyGObject_unmarshal_envp (envp_value, &envp, &envp_length))
       goto invalid_argument;
 
-    frida_spawn_options_set_envp (options, envp, envp_length);
+    telco_spawn_options_set_envp (options, envp, envp_length);
 
     g_strfreev (envp);
   }
@@ -2563,22 +2563,22 @@ PyDevice_spawn (PyDevice * self, PyObject * args, PyObject * kw)
     if (!PyGObject_unmarshal_envp (env_value, &env, &env_length))
       goto invalid_argument;
 
-    frida_spawn_options_set_env (options, env, env_length);
+    telco_spawn_options_set_env (options, env, env_length);
 
     g_strfreev (env);
   }
 
   if (cwd != NULL)
-    frida_spawn_options_set_cwd (options, cwd);
+    telco_spawn_options_set_cwd (options, cwd);
 
   if (stdio_value != NULL)
   {
-    FridaStdio stdio;
+    TelcoStdio stdio;
 
-    if (!PyGObject_unmarshal_enum (stdio_value, FRIDA_TYPE_STDIO, &stdio))
+    if (!PyGObject_unmarshal_enum (stdio_value, TELCO_TYPE_STDIO, &stdio))
       goto invalid_argument;
 
-    frida_spawn_options_set_stdio (options, stdio);
+    telco_spawn_options_set_stdio (options, stdio);
   }
 
   if (aux_value != Py_None)
@@ -2587,7 +2587,7 @@ PyDevice_spawn (PyDevice * self, PyObject * args, PyObject * kw)
     Py_ssize_t pos;
     PyObject * key, * value;
 
-    aux = frida_spawn_options_get_aux (options);
+    aux = telco_spawn_options_get_aux (options);
 
     if (!PyDict_Check (aux_value))
       goto invalid_aux_dict;
@@ -2612,13 +2612,13 @@ PyDevice_spawn (PyDevice * self, PyObject * args, PyObject * kw)
   }
 
   Py_BEGIN_ALLOW_THREADS
-  pid = frida_device_spawn_sync (PY_GOBJECT_HANDLE (self), program, options, g_cancellable_get_current (), &error);
+  pid = telco_device_spawn_sync (PY_GOBJECT_HANDLE (self), program, options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   g_object_unref (options);
 
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   return PyLong_FromUnsignedLong (pid);
 
@@ -2655,13 +2655,13 @@ PyDevice_input (PyDevice * self, PyObject * args)
   data = g_bytes_new (data_buffer, data_size);
 
   Py_BEGIN_ALLOW_THREADS
-  frida_device_input_sync (PY_GOBJECT_HANDLE (self), (guint) pid, data, g_cancellable_get_current (), &error);
+  telco_device_input_sync (PY_GOBJECT_HANDLE (self), (guint) pid, data, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   g_bytes_unref (data);
 
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -2676,10 +2676,10 @@ PyDevice_resume (PyDevice * self, PyObject * args)
     return NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_device_resume_sync (PY_GOBJECT_HANDLE (self), (guint) pid, g_cancellable_get_current (), &error);
+  telco_device_resume_sync (PY_GOBJECT_HANDLE (self), (guint) pid, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -2694,10 +2694,10 @@ PyDevice_kill (PyDevice * self, PyObject * args)
     return NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_device_kill_sync (PY_GOBJECT_HANDLE (self), (guint) pid, g_cancellable_get_current (), &error);
+  telco_device_kill_sync (PY_GOBJECT_HANDLE (self), (guint) pid, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -2710,9 +2710,9 @@ PyDevice_attach (PyDevice * self, PyObject * args, PyObject * kw)
   long pid;
   char * realm_value = NULL;
   unsigned int persist_timeout = 0;
-  FridaSessionOptions * options = NULL;
+  TelcoSessionOptions * options = NULL;
   GError * error = NULL;
-  FridaSession * handle;
+  TelcoSession * handle;
 
   if (!PyArg_ParseTupleAndKeywords (args, kw, "l|esI", keywords,
         &pid,
@@ -2725,12 +2725,12 @@ PyDevice_attach (PyDevice * self, PyObject * args, PyObject * kw)
     goto beach;
 
   Py_BEGIN_ALLOW_THREADS
-  handle = frida_device_attach_sync (PY_GOBJECT_HANDLE (self), (guint) pid, options, g_cancellable_get_current (), &error);
+  handle = telco_device_attach_sync (PY_GOBJECT_HANDLE (self), (guint) pid, options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   result = (error == NULL)
       ? PySession_new_take_handle (handle)
-      : PyFrida_raise (error);
+      : PyTelco_raise (error);
 
 beach:
   g_clear_object (&options);
@@ -2740,25 +2740,25 @@ beach:
   return result;
 }
 
-static FridaSessionOptions *
+static TelcoSessionOptions *
 PyDevice_parse_session_options (const gchar * realm_value,
                                 guint persist_timeout)
 {
-  FridaSessionOptions * options;
+  TelcoSessionOptions * options;
 
-  options = frida_session_options_new ();
+  options = telco_session_options_new ();
 
   if (realm_value != NULL)
   {
-    FridaRealm realm;
+    TelcoRealm realm;
 
-    if (!PyGObject_unmarshal_enum (realm_value, FRIDA_TYPE_REALM, &realm))
+    if (!PyGObject_unmarshal_enum (realm_value, TELCO_TYPE_REALM, &realm))
       goto propagate_error;
 
-    frida_session_options_set_realm (options, realm);
+    telco_session_options_set_realm (options, realm);
   }
 
-  frida_session_options_set_persist_timeout (options, persist_timeout);
+  telco_session_options_set_persist_timeout (options, persist_timeout);
 
   return options;
 
@@ -2782,10 +2782,10 @@ PyDevice_inject_library_file (PyDevice * self, PyObject * args)
     return NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  id = frida_device_inject_library_file_sync (PY_GOBJECT_HANDLE (self), (guint) pid, path, entrypoint, data, g_cancellable_get_current (), &error);
+  id = telco_device_inject_library_file_sync (PY_GOBJECT_HANDLE (self), (guint) pid, path, entrypoint, data, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   return PyLong_FromUnsignedLong (id);
 }
@@ -2807,13 +2807,13 @@ PyDevice_inject_library_blob (PyDevice * self, PyObject * args)
   blob = g_bytes_new (blob_buffer, blob_size);
 
   Py_BEGIN_ALLOW_THREADS
-  id = frida_device_inject_library_blob_sync (PY_GOBJECT_HANDLE (self), (guint) pid, blob, entrypoint, data, g_cancellable_get_current (), &error);
+  id = telco_device_inject_library_blob_sync (PY_GOBJECT_HANDLE (self), (guint) pid, blob, entrypoint, data, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   g_bytes_unref (blob);
 
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   return PyLong_FromUnsignedLong (id);
 }
@@ -2829,10 +2829,10 @@ PyDevice_open_channel (PyDevice * self, PyObject * args)
     return NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  stream = frida_device_open_channel_sync (PY_GOBJECT_HANDLE (self), address, g_cancellable_get_current (), &error);
+  stream = telco_device_open_channel_sync (PY_GOBJECT_HANDLE (self), address, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   return PyIOStream_new_take_handle (stream);
 }
@@ -2843,19 +2843,19 @@ PyDevice_unpair (PyDevice * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_device_unpair_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_device_unpair_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
 
 
 static PyObject *
-PyApplication_new_take_handle (FridaApplication * handle)
+PyApplication_new_take_handle (TelcoApplication * handle)
 {
-  return PyGObject_new_take_handle (handle, PYFRIDA_TYPE (Application));
+  return PyGObject_new_take_handle (handle, PYTELCO_TYPE (Application));
 }
 
 static int
@@ -2873,12 +2873,12 @@ PyApplication_init (PyApplication * self, PyObject * args, PyObject * kw)
 }
 
 static void
-PyApplication_init_from_handle (PyApplication * self, FridaApplication * handle)
+PyApplication_init_from_handle (PyApplication * self, TelcoApplication * handle)
 {
-  self->identifier = PyUnicode_FromUTF8String (frida_application_get_identifier (handle));
-  self->name = PyUnicode_FromUTF8String (frida_application_get_name (handle));
-  self->pid = frida_application_get_pid (handle);
-  self->parameters = PyApplication_marshal_parameters_dict (frida_application_get_parameters (handle));
+  self->identifier = PyUnicode_FromUTF8String (telco_application_get_identifier (handle));
+  self->name = PyUnicode_FromUTF8String (telco_application_get_name (handle));
+  self->pid = telco_application_get_pid (handle);
+  self->parameters = PyApplication_marshal_parameters_dict (telco_application_get_parameters (handle));
 }
 
 static void
@@ -2895,7 +2895,7 @@ static PyObject *
 PyApplication_repr (PyApplication * self)
 {
   PyObject * result;
-  FridaApplication * handle;
+  TelcoApplication * handle;
   GString * repr;
   gchar * str;
 
@@ -2904,13 +2904,13 @@ PyApplication_repr (PyApplication * self)
   repr = g_string_new ("Application(");
 
   g_string_append_printf (repr, "identifier=\"%s\", name=\"%s\"",
-      frida_application_get_identifier (handle),
-      frida_application_get_name (handle));
+      telco_application_get_identifier (handle),
+      telco_application_get_name (handle));
 
   if (self->pid != 0)
     g_string_append_printf (repr, ", pid=%u", self->pid);
 
-  str = PyFrida_repr (self->parameters);
+  str = PyTelco_repr (self->parameters);
   g_string_append_printf (repr, ", parameters=%s", str);
   g_free (str);
 
@@ -2954,9 +2954,9 @@ PyApplication_marshal_parameters_dict (GHashTable * dict)
 
 
 static PyObject *
-PyProcess_new_take_handle (FridaProcess * handle)
+PyProcess_new_take_handle (TelcoProcess * handle)
 {
-  return PyGObject_new_take_handle (handle, PYFRIDA_TYPE (Process));
+  return PyGObject_new_take_handle (handle, PYTELCO_TYPE (Process));
 }
 
 static int
@@ -2973,11 +2973,11 @@ PyProcess_init (PyProcess * self, PyObject * args, PyObject * kw)
 }
 
 static void
-PyProcess_init_from_handle (PyProcess * self, FridaProcess * handle)
+PyProcess_init_from_handle (PyProcess * self, TelcoProcess * handle)
 {
-  self->pid = frida_process_get_pid (handle);
-  self->name = PyUnicode_FromUTF8String (frida_process_get_name (handle));
-  self->parameters = PyProcess_marshal_parameters_dict (frida_process_get_parameters (handle));
+  self->pid = telco_process_get_pid (handle);
+  self->name = PyUnicode_FromUTF8String (telco_process_get_name (handle));
+  self->parameters = PyProcess_marshal_parameters_dict (telco_process_get_parameters (handle));
 }
 
 static void
@@ -2993,7 +2993,7 @@ static PyObject *
 PyProcess_repr (PyProcess * self)
 {
   PyObject * result;
-  FridaProcess * handle;
+  TelcoProcess * handle;
   GString * repr;
   gchar * str;
 
@@ -3003,9 +3003,9 @@ PyProcess_repr (PyProcess * self)
 
   g_string_append_printf (repr, "pid=%u, name=\"%s\"",
       self->pid,
-      frida_process_get_name (handle));
+      telco_process_get_name (handle));
 
-  str = PyFrida_repr (self->parameters);
+  str = PyTelco_repr (self->parameters);
   g_string_append_printf (repr, ", parameters=%s", str);
   g_free (str);
 
@@ -3049,9 +3049,9 @@ PyProcess_marshal_parameters_dict (GHashTable * dict)
 
 
 static PyObject *
-PySpawn_new_take_handle (FridaSpawn * handle)
+PySpawn_new_take_handle (TelcoSpawn * handle)
 {
-  return PyGObject_new_take_handle (handle, PYFRIDA_TYPE (Spawn));
+  return PyGObject_new_take_handle (handle, PYTELCO_TYPE (Spawn));
 }
 
 static int
@@ -3067,10 +3067,10 @@ PySpawn_init (PySpawn * self, PyObject * args, PyObject * kw)
 }
 
 static void
-PySpawn_init_from_handle (PySpawn * self, FridaSpawn * handle)
+PySpawn_init_from_handle (PySpawn * self, TelcoSpawn * handle)
 {
-  self->pid = frida_spawn_get_pid (handle);
-  self->identifier = PyGObject_marshal_string (frida_spawn_get_identifier (handle));
+  self->pid = telco_spawn_get_pid (handle);
+  self->identifier = PyGObject_marshal_string (telco_spawn_get_identifier (handle));
 }
 
 static void
@@ -3109,9 +3109,9 @@ PySpawn_repr (PySpawn * self)
 
 
 static PyObject *
-PyChild_new_take_handle (FridaChild * handle)
+PyChild_new_take_handle (TelcoChild * handle)
 {
-  return PyGObject_new_take_handle (handle, PYFRIDA_TYPE (Child));
+  return PyGObject_new_take_handle (handle, PYTELCO_TYPE (Child));
 }
 
 static int
@@ -3132,24 +3132,24 @@ PyChild_init (PyChild * self, PyObject * args, PyObject * kw)
 }
 
 static void
-PyChild_init_from_handle (PyChild * self, FridaChild * handle)
+PyChild_init_from_handle (PyChild * self, TelcoChild * handle)
 {
   gchar * const * argv, * const * envp;
   gint argv_length, envp_length;
 
-  self->pid = frida_child_get_pid (handle);
-  self->parent_pid = frida_child_get_parent_pid (handle);
+  self->pid = telco_child_get_pid (handle);
+  self->parent_pid = telco_child_get_parent_pid (handle);
 
-  self->origin = PyGObject_marshal_enum (frida_child_get_origin (handle), FRIDA_TYPE_CHILD_ORIGIN);
+  self->origin = PyGObject_marshal_enum (telco_child_get_origin (handle), TELCO_TYPE_CHILD_ORIGIN);
 
-  self->identifier = PyGObject_marshal_string (frida_child_get_identifier (handle));
+  self->identifier = PyGObject_marshal_string (telco_child_get_identifier (handle));
 
-  self->path = PyGObject_marshal_string (frida_child_get_path (handle));
+  self->path = PyGObject_marshal_string (telco_child_get_path (handle));
 
-  argv = frida_child_get_argv (handle, &argv_length);
+  argv = telco_child_get_argv (handle, &argv_length);
   self->argv = PyGObject_marshal_strv (argv, argv_length);
 
-  envp = frida_child_get_envp (handle, &envp_length);
+  envp = telco_child_get_envp (handle, &envp_length);
   self->envp = PyGObject_marshal_envp (envp, envp_length);
 }
 
@@ -3169,9 +3169,9 @@ static PyObject *
 PyChild_repr (PyChild * self)
 {
   PyObject * result;
-  FridaChild * handle;
+  TelcoChild * handle;
   GString * repr;
-  FridaChildOrigin origin;
+  TelcoChildOrigin origin;
   GEnumClass * origin_class;
   GEnumValue * origin_value;
 
@@ -3181,8 +3181,8 @@ PyChild_repr (PyChild * self)
 
   g_string_append_printf (repr, "pid=%u, parent_pid=%u", self->pid, self->parent_pid);
 
-  origin = frida_child_get_origin (handle);
-  origin_class = g_type_class_ref (FRIDA_TYPE_CHILD_ORIGIN);
+  origin = telco_child_get_origin (handle);
+  origin_class = g_type_class_ref (TELCO_TYPE_CHILD_ORIGIN);
   origin_value = g_enum_get_value (origin_class, origin);
   g_string_append_printf (repr, ", origin=%s", origin_value->value_nick);
   g_type_class_unref (origin_class);
@@ -3191,20 +3191,20 @@ PyChild_repr (PyChild * self)
   {
     gchar * identifier;
 
-    identifier = PyFrida_repr (self->identifier);
+    identifier = PyTelco_repr (self->identifier);
 
     g_string_append_printf (repr, ", identifier=%s", identifier);
 
     g_free (identifier);
   }
 
-  if (origin != FRIDA_CHILD_ORIGIN_FORK)
+  if (origin != TELCO_CHILD_ORIGIN_FORK)
   {
     gchar * path, * argv, * envp;
 
-    path = PyFrida_repr (self->path);
-    argv = PyFrida_repr (self->argv);
-    envp = PyFrida_repr (self->envp);
+    path = PyTelco_repr (self->path);
+    argv = PyTelco_repr (self->argv);
+    envp = PyTelco_repr (self->envp);
 
     g_string_append_printf (repr, ", path=%s, argv=%s, envp=%s", path, argv, envp);
 
@@ -3239,13 +3239,13 @@ PyCrash_init (PyCrash * self, PyObject * args, PyObject * kw)
 }
 
 static void
-PyCrash_init_from_handle (PyCrash * self, FridaCrash * handle)
+PyCrash_init_from_handle (PyCrash * self, TelcoCrash * handle)
 {
-  self->pid = frida_crash_get_pid (handle);
-  self->process_name = PyGObject_marshal_string (frida_crash_get_process_name (handle));
-  self->summary = PyGObject_marshal_string (frida_crash_get_summary (handle));
-  self->report = PyGObject_marshal_string (frida_crash_get_report (handle));
-  self->parameters = PyGObject_marshal_parameters_dict (frida_crash_get_parameters (handle));
+  self->pid = telco_crash_get_pid (handle);
+  self->process_name = PyGObject_marshal_string (telco_crash_get_process_name (handle));
+  self->summary = PyGObject_marshal_string (telco_crash_get_summary (handle));
+  self->report = PyGObject_marshal_string (telco_crash_get_report (handle));
+  self->parameters = PyGObject_marshal_parameters_dict (telco_crash_get_parameters (handle));
 }
 
 static void
@@ -3263,7 +3263,7 @@ static PyObject *
 PyCrash_repr (PyCrash * self)
 {
   PyObject * result;
-  FridaCrash * handle;
+  TelcoCrash * handle;
   GString * repr;
   gchar * str;
 
@@ -3273,11 +3273,11 @@ PyCrash_repr (PyCrash * self)
 
   g_string_append_printf (repr, "pid=%u, process_name=\"%s\", summary=\"%s\", report=<%u bytes>",
       self->pid,
-      frida_crash_get_process_name (handle),
-      frida_crash_get_summary (handle),
-      (guint) strlen (frida_crash_get_report (handle)));
+      telco_crash_get_process_name (handle),
+      telco_crash_get_summary (handle),
+      (guint) strlen (telco_crash_get_report (handle)));
 
-  str = PyFrida_repr (self->parameters);
+  str = PyTelco_repr (self->parameters);
   g_string_append_printf (repr, ", parameters=%s", str);
   g_free (str);
 
@@ -3292,9 +3292,9 @@ PyCrash_repr (PyCrash * self)
 
 
 static PyObject *
-PyBus_new_take_handle (FridaBus * handle)
+PyBus_new_take_handle (TelcoBus * handle)
 {
-  return PyGObject_new_take_handle (handle, PYFRIDA_TYPE (Bus));
+  return PyGObject_new_take_handle (handle, PYTELCO_TYPE (Bus));
 }
 
 static PyObject *
@@ -3303,10 +3303,10 @@ PyBus_attach (PySession * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_bus_attach_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_bus_attach_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -3326,7 +3326,7 @@ PyBus_post (PyScript * self, PyObject * args, PyObject * kw)
   data = (data_buffer != NULL) ? g_bytes_new (data_buffer, data_size) : NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_bus_post (PY_GOBJECT_HANDLE (self), message, data);
+  telco_bus_post (PY_GOBJECT_HANDLE (self), message, data);
   Py_END_ALLOW_THREADS
 
   g_bytes_unref (data);
@@ -3337,9 +3337,9 @@ PyBus_post (PyScript * self, PyObject * args, PyObject * kw)
 
 
 static PyObject *
-PySession_new_take_handle (FridaSession * handle)
+PySession_new_take_handle (TelcoSession * handle)
 {
-  return PyGObject_new_take_handle (handle, PYFRIDA_TYPE (Session));
+  return PyGObject_new_take_handle (handle, PYTELCO_TYPE (Session));
 }
 
 static int
@@ -3354,9 +3354,9 @@ PySession_init (PySession * self, PyObject * args, PyObject * kw)
 }
 
 static void
-PySession_init_from_handle (PySession * self, FridaSession * handle)
+PySession_init_from_handle (PySession * self, TelcoSession * handle)
 {
-  self->pid = frida_session_get_pid (handle);
+  self->pid = telco_session_get_pid (handle);
 }
 
 static PyObject *
@@ -3371,7 +3371,7 @@ PySession_is_detached (PySession * self)
   gboolean is_detached;
 
   Py_BEGIN_ALLOW_THREADS
-  is_detached = frida_session_is_detached (PY_GOBJECT_HANDLE (self));
+  is_detached = telco_session_is_detached (PY_GOBJECT_HANDLE (self));
   Py_END_ALLOW_THREADS
 
   return PyBool_FromLong (is_detached);
@@ -3383,10 +3383,10 @@ PySession_detach (PySession * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_session_detach_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_session_detach_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -3397,10 +3397,10 @@ PySession_resume (PySession * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_session_resume_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_session_resume_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -3411,10 +3411,10 @@ PySession_enable_child_gating (PySession * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_session_enable_child_gating_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_session_enable_child_gating_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -3425,10 +3425,10 @@ PySession_disable_child_gating (PySession * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_session_disable_child_gating_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_session_disable_child_gating_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -3443,9 +3443,9 @@ PySession_create_script (PySession * self, PyObject * args, PyObject * kw)
   gconstpointer snapshot_data = NULL;
   Py_ssize_t snapshot_size = 0;
   const char * runtime_value = NULL;
-  FridaScriptOptions * options;
+  TelcoScriptOptions * options;
   GError * error = NULL;
-  FridaScript * handle;
+  TelcoScript * handle;
 
   if (!PyArg_ParseTupleAndKeywords (args, kw, "es|esy#z", keywords, "utf-8", &source, "utf-8", &name, &snapshot_data, &snapshot_size, &runtime_value))
     return NULL;
@@ -3455,12 +3455,12 @@ PySession_create_script (PySession * self, PyObject * args, PyObject * kw)
     goto beach;
 
   Py_BEGIN_ALLOW_THREADS
-  handle = frida_session_create_script_sync (PY_GOBJECT_HANDLE (self), source, options, g_cancellable_get_current (), &error);
+  handle = telco_session_create_script_sync (PY_GOBJECT_HANDLE (self), source, options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   result = (error == NULL)
       ? PyScript_new_take_handle (handle)
-      : PyFrida_raise (error);
+      : PyTelco_raise (error);
 
 beach:
   g_clear_object (&options);
@@ -3483,9 +3483,9 @@ PySession_create_script_from_bytes (PySession * self, PyObject * args, PyObject 
   Py_ssize_t snapshot_size = 0;
   const char * runtime_value = NULL;
   GBytes * bytes;
-  FridaScriptOptions * options;
+  TelcoScriptOptions * options;
   GError * error = NULL;
-  FridaScript * handle;
+  TelcoScript * handle;
 
   if (!PyArg_ParseTupleAndKeywords (args, kw, "y#|esy#z", keywords, &data, &size, "utf-8", &name, &snapshot_data, &snapshot_size, &runtime_value))
     return NULL;
@@ -3497,12 +3497,12 @@ PySession_create_script_from_bytes (PySession * self, PyObject * args, PyObject 
     goto beach;
 
   Py_BEGIN_ALLOW_THREADS
-  handle = frida_session_create_script_from_bytes_sync (PY_GOBJECT_HANDLE (self), bytes, options, g_cancellable_get_current (), &error);
+  handle = telco_session_create_script_from_bytes_sync (PY_GOBJECT_HANDLE (self), bytes, options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   result = (error == NULL)
       ? PyScript_new_take_handle (handle)
-      : PyFrida_raise (error);
+      : PyTelco_raise (error);
 
 beach:
   g_clear_object (&options);
@@ -3521,7 +3521,7 @@ PySession_compile_script (PySession * self, PyObject * args, PyObject * kw)
   char * source;
   char * name = NULL;
   const char * runtime_value = NULL;
-  FridaScriptOptions * options;
+  TelcoScriptOptions * options;
   GError * error = NULL;
   GBytes * bytes;
 
@@ -3533,7 +3533,7 @@ PySession_compile_script (PySession * self, PyObject * args, PyObject * kw)
     goto beach;
 
   Py_BEGIN_ALLOW_THREADS
-  bytes = frida_session_compile_script_sync (PY_GOBJECT_HANDLE (self), source, options, g_cancellable_get_current (), &error);
+  bytes = telco_session_compile_script_sync (PY_GOBJECT_HANDLE (self), source, options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   if (error == NULL)
@@ -3544,7 +3544,7 @@ PySession_compile_script (PySession * self, PyObject * args, PyObject * kw)
   }
   else
   {
-    result = PyFrida_raise (error);
+    result = PyTelco_raise (error);
   }
 
 beach:
@@ -3556,31 +3556,31 @@ beach:
   return result;
 }
 
-static FridaScriptOptions *
+static TelcoScriptOptions *
 PySession_parse_script_options (const gchar * name, gconstpointer snapshot_data, gsize snapshot_size, const gchar * runtime_value)
 {
-  FridaScriptOptions * options;
+  TelcoScriptOptions * options;
 
-  options = frida_script_options_new ();
+  options = telco_script_options_new ();
 
   if (name != NULL)
-    frida_script_options_set_name (options, name);
+    telco_script_options_set_name (options, name);
 
   if (snapshot_data != NULL)
   {
     GBytes * snapshot = g_bytes_new (snapshot_data, snapshot_size);
-    frida_script_options_set_snapshot (options, snapshot);
+    telco_script_options_set_snapshot (options, snapshot);
     g_bytes_unref (snapshot);
   }
 
   if (runtime_value != NULL)
   {
-    FridaScriptRuntime runtime;
+    TelcoScriptRuntime runtime;
 
-    if (!PyGObject_unmarshal_enum (runtime_value, FRIDA_TYPE_SCRIPT_RUNTIME, &runtime))
+    if (!PyGObject_unmarshal_enum (runtime_value, TELCO_TYPE_SCRIPT_RUNTIME, &runtime))
       goto invalid_argument;
 
-    frida_script_options_set_runtime (options, runtime);
+    telco_script_options_set_runtime (options, runtime);
   }
 
   return options;
@@ -3601,7 +3601,7 @@ PySession_snapshot_script (PySession * self, PyObject * args, PyObject * kw)
   char * embed_script;
   char * warmup_script = NULL;
   const char * runtime_value = NULL;
-  FridaSnapshotOptions * options;
+  TelcoSnapshotOptions * options;
   GError * error = NULL;
   GBytes * bytes;
 
@@ -3613,7 +3613,7 @@ PySession_snapshot_script (PySession * self, PyObject * args, PyObject * kw)
     goto beach;
 
   Py_BEGIN_ALLOW_THREADS
-  bytes = frida_session_snapshot_script_sync (PY_GOBJECT_HANDLE (self), embed_script, options, g_cancellable_get_current (), &error);
+  bytes = telco_session_snapshot_script_sync (PY_GOBJECT_HANDLE (self), embed_script, options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   if (error == NULL)
@@ -3624,7 +3624,7 @@ PySession_snapshot_script (PySession * self, PyObject * args, PyObject * kw)
   }
   else
   {
-    result = PyFrida_raise (error);
+    result = PyTelco_raise (error);
   }
 
 beach:
@@ -3636,24 +3636,24 @@ beach:
   return result;
 }
 
-static FridaSnapshotOptions *
+static TelcoSnapshotOptions *
 PySession_parse_snapshot_options (const gchar * warmup_script, const gchar * runtime_value)
 {
-  FridaSnapshotOptions * options;
+  TelcoSnapshotOptions * options;
 
-  options = frida_snapshot_options_new ();
+  options = telco_snapshot_options_new ();
 
   if (warmup_script != NULL)
-    frida_snapshot_options_set_warmup_script (options, warmup_script);
+    telco_snapshot_options_set_warmup_script (options, warmup_script);
 
   if (runtime_value != NULL)
   {
-    FridaScriptRuntime runtime;
+    TelcoScriptRuntime runtime;
 
-    if (!PyGObject_unmarshal_enum (runtime_value, FRIDA_TYPE_SCRIPT_RUNTIME, &runtime))
+    if (!PyGObject_unmarshal_enum (runtime_value, TELCO_TYPE_SCRIPT_RUNTIME, &runtime))
       goto invalid_argument;
 
-    frida_snapshot_options_set_runtime (options, runtime);
+    telco_snapshot_options_set_runtime (options, runtime);
   }
 
   return options;
@@ -3673,7 +3673,7 @@ PySession_setup_peer_connection (PySession * self, PyObject * args, PyObject * k
   static char * keywords[] = { "stun_server", "relays", NULL };
   char * stun_server = NULL;
   PyObject * relays = NULL;
-  FridaPeerOptions * options = NULL;
+  TelcoPeerOptions * options = NULL;
   GError * error = NULL;
 
   if (!PyArg_ParseTupleAndKeywords (args, kw, "|esO", keywords,
@@ -3686,7 +3686,7 @@ PySession_setup_peer_connection (PySession * self, PyObject * args, PyObject * k
     goto beach;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_session_setup_peer_connection_sync (PY_GOBJECT_HANDLE (self), options, g_cancellable_get_current (), &error);
+  telco_session_setup_peer_connection_sync (PY_GOBJECT_HANDLE (self), options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   if (error != NULL)
@@ -3697,7 +3697,7 @@ PySession_setup_peer_connection (PySession * self, PyObject * args, PyObject * k
 
 propagate_error:
   {
-    PyFrida_raise (error);
+    PyTelco_raise (error);
     goto beach;
   }
 beach:
@@ -3713,15 +3713,15 @@ beach:
   }
 }
 
-static FridaPeerOptions *
+static TelcoPeerOptions *
 PySession_parse_peer_options (const gchar * stun_server, PyObject * relays)
 {
-  FridaPeerOptions * options;
+  TelcoPeerOptions * options;
   PyObject * relay;
 
-  options = frida_peer_options_new ();
+  options = telco_peer_options_new ();
 
-  frida_peer_options_set_stun_server (options, stun_server);
+  telco_peer_options_set_stun_server (options, stun_server);
 
   if (relays != NULL)
   {
@@ -3737,10 +3737,10 @@ PySession_parse_peer_options (const gchar * stun_server, PyObject * relays)
       if (relay == NULL)
         goto propagate_error;
 
-      if (!PyObject_IsInstance (relay, PYFRIDA_TYPE_OBJECT (Relay)))
+      if (!PyObject_IsInstance (relay, PYTELCO_TYPE_OBJECT (Relay)))
         goto expected_relay;
 
-      frida_peer_options_add_relay (options, PY_GOBJECT_HANDLE (relay));
+      telco_peer_options_add_relay (options, PY_GOBJECT_HANDLE (relay));
 
       Py_DECREF (relay);
     }
@@ -3772,9 +3772,9 @@ PySession_join_portal (PySession * self, PyObject * args, PyObject * kw)
   char * certificate = NULL;
   char * token = NULL;
   PyObject * acl = NULL;
-  FridaPortalOptions * options;
+  TelcoPortalOptions * options;
   GError * error = NULL;
-  FridaPortalMembership * handle;
+  TelcoPortalMembership * handle;
 
   if (!PyArg_ParseTupleAndKeywords (args, kw, "es|esesO", keywords,
         "utf-8", &address,
@@ -3788,12 +3788,12 @@ PySession_join_portal (PySession * self, PyObject * args, PyObject * kw)
     goto beach;
 
   Py_BEGIN_ALLOW_THREADS
-  handle = frida_session_join_portal_sync (PY_GOBJECT_HANDLE (self), address, options, g_cancellable_get_current (), &error);
+  handle = telco_session_join_portal_sync (PY_GOBJECT_HANDLE (self), address, options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   result = (error == NULL)
       ? PyPortalMembership_new_take_handle (handle)
-      : PyFrida_raise (error);
+      : PyTelco_raise (error);
 
 beach:
   g_clear_object (&options);
@@ -3805,12 +3805,12 @@ beach:
   return result;
 }
 
-static FridaPortalOptions *
+static TelcoPortalOptions *
 PySession_parse_portal_options (const gchar * certificate_value, const gchar * token, PyObject * acl_value)
 {
-  FridaPortalOptions * options;
+  TelcoPortalOptions * options;
 
-  options = frida_portal_options_new ();
+  options = telco_portal_options_new ();
 
   if (certificate_value != NULL)
   {
@@ -3819,13 +3819,13 @@ PySession_parse_portal_options (const gchar * certificate_value, const gchar * t
     if (!PyGObject_unmarshal_certificate (certificate_value, &certificate))
       goto propagate_error;
 
-    frida_portal_options_set_certificate (options, certificate);
+    telco_portal_options_set_certificate (options, certificate);
 
     g_object_unref (certificate);
   }
 
   if (token != NULL)
-    frida_portal_options_set_token (options, token);
+    telco_portal_options_set_token (options, token);
 
   if (acl_value != NULL)
   {
@@ -3835,7 +3835,7 @@ PySession_parse_portal_options (const gchar * certificate_value, const gchar * t
     if (!PyGObject_unmarshal_strv (acl_value, &acl, &acl_length))
       goto propagate_error;
 
-    frida_portal_options_set_acl (options, acl, acl_length);
+    telco_portal_options_set_acl (options, acl, acl_length);
 
     g_strfreev (acl);
   }
@@ -3852,9 +3852,9 @@ propagate_error:
 
 
 static PyObject *
-PyScript_new_take_handle (FridaScript * handle)
+PyScript_new_take_handle (TelcoScript * handle)
 {
-  return PyGObject_new_take_handle (handle, PYFRIDA_TYPE (Script));
+  return PyGObject_new_take_handle (handle, PYTELCO_TYPE (Script));
 }
 
 static PyObject *
@@ -3863,7 +3863,7 @@ PyScript_is_destroyed (PyScript * self)
   gboolean is_destroyed;
 
   Py_BEGIN_ALLOW_THREADS
-  is_destroyed = frida_script_is_destroyed (PY_GOBJECT_HANDLE (self));
+  is_destroyed = telco_script_is_destroyed (PY_GOBJECT_HANDLE (self));
   Py_END_ALLOW_THREADS
 
   return PyBool_FromLong (is_destroyed);
@@ -3875,10 +3875,10 @@ PyScript_load (PyScript * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_script_load_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_script_load_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -3889,10 +3889,10 @@ PyScript_unload (PyScript * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_script_unload_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_script_unload_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -3903,10 +3903,10 @@ PyScript_eternalize (PyScript * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_script_eternalize_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_script_eternalize_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -3926,7 +3926,7 @@ PyScript_post (PyScript * self, PyObject * args, PyObject * kw)
   data = (data_buffer != NULL) ? g_bytes_new (data_buffer, data_size) : NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_script_post (PY_GOBJECT_HANDLE (self), message, data);
+  telco_script_post (PY_GOBJECT_HANDLE (self), message, data);
   Py_END_ALLOW_THREADS
 
   g_bytes_unref (data);
@@ -3946,10 +3946,10 @@ PyScript_enable_debugger (PyScript * self, PyObject * args, PyObject * kw)
     return NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_script_enable_debugger_sync (PY_GOBJECT_HANDLE (self), port, g_cancellable_get_current (), &error);
+  telco_script_enable_debugger_sync (PY_GOBJECT_HANDLE (self), port, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -3960,10 +3960,10 @@ PyScript_disable_debugger (PyScript * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_script_disable_debugger_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_script_disable_debugger_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -3978,8 +3978,8 @@ PyRelay_init (PyRelay * self, PyObject * args, PyObject * kw)
   char * username = NULL;
   char * password = NULL;
   char * kind_value = NULL;
-  FridaRelayKind kind;
-  FridaRelay * handle;
+  TelcoRelayKind kind;
+  TelcoRelay * handle;
 
   if (PyGObject_tp_init ((PyObject *) self, args, kw) < 0)
     return -1;
@@ -3991,12 +3991,12 @@ PyRelay_init (PyRelay * self, PyObject * args, PyObject * kw)
         "utf-8", &kind_value))
     return -1;
 
-  if (!PyGObject_unmarshal_enum (kind_value, FRIDA_TYPE_RELAY_KIND, &kind))
+  if (!PyGObject_unmarshal_enum (kind_value, TELCO_TYPE_RELAY_KIND, &kind))
     goto beach;
 
-  handle = frida_relay_new (address, username, password, kind);
+  handle = telco_relay_new (address, username, password, kind);
 
-  PyGObject_take_handle (&self->parent, handle, PYFRIDA_TYPE (Relay));
+  PyGObject_take_handle (&self->parent, handle, PYTELCO_TYPE (Relay));
 
   PyRelay_init_from_handle (self, handle);
 
@@ -4012,12 +4012,12 @@ beach:
 }
 
 static void
-PyRelay_init_from_handle (PyRelay * self, FridaRelay * handle)
+PyRelay_init_from_handle (PyRelay * self, TelcoRelay * handle)
 {
-  self->address = PyUnicode_FromUTF8String (frida_relay_get_address (handle));
-  self->username = PyUnicode_FromUTF8String (frida_relay_get_username (handle));
-  self->password = PyUnicode_FromUTF8String (frida_relay_get_password (handle));
-  self->kind = PyGObject_marshal_enum (frida_relay_get_kind (handle), FRIDA_TYPE_RELAY_KIND);
+  self->address = PyUnicode_FromUTF8String (telco_relay_get_address (handle));
+  self->username = PyUnicode_FromUTF8String (telco_relay_get_username (handle));
+  self->password = PyUnicode_FromUTF8String (telco_relay_get_password (handle));
+  self->kind = PyGObject_marshal_enum (telco_relay_get_kind (handle), TELCO_TYPE_RELAY_KIND);
 }
 
 static void
@@ -4057,9 +4057,9 @@ PyRelay_repr (PyRelay * self)
 
 
 static PyObject *
-PyPortalMembership_new_take_handle (FridaPortalMembership * handle)
+PyPortalMembership_new_take_handle (TelcoPortalMembership * handle)
 {
-  return PyGObject_new_take_handle (handle, PYFRIDA_TYPE (PortalMembership));
+  return PyGObject_new_take_handle (handle, PYTELCO_TYPE (PortalMembership));
 }
 
 static PyObject *
@@ -4068,10 +4068,10 @@ PyPortalMembership_terminate (PyPortalMembership * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_portal_membership_terminate_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_portal_membership_terminate_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -4083,22 +4083,22 @@ PyPortalService_init (PyPortalService * self, PyObject * args, PyObject * kw)
   static char * keywords[] = { "cluster_params", "control_params", NULL };
   PyEndpointParameters * cluster_params;
   PyEndpointParameters * control_params = NULL;
-  FridaPortalService * handle;
+  TelcoPortalService * handle;
 
   if (PyGObject_tp_init ((PyObject *) self, args, kw) < 0)
     return -1;
 
   if (!PyArg_ParseTupleAndKeywords (args, kw, "O!|O!", keywords,
-        PYFRIDA_TYPE_OBJECT (EndpointParameters), &cluster_params,
-        PYFRIDA_TYPE_OBJECT (EndpointParameters), &control_params))
+        PYTELCO_TYPE_OBJECT (EndpointParameters), &cluster_params,
+        PYTELCO_TYPE_OBJECT (EndpointParameters), &control_params))
     return -1;
 
   g_atomic_int_inc (&toplevel_objects_alive);
 
-  handle = frida_portal_service_new (PY_GOBJECT_HANDLE (cluster_params),
+  handle = telco_portal_service_new (PY_GOBJECT_HANDLE (cluster_params),
       (control_params != NULL) ? PY_GOBJECT_HANDLE (control_params) : NULL);
 
-  PyGObject_take_handle (&self->parent, handle, PYFRIDA_TYPE (PortalService));
+  PyGObject_take_handle (&self->parent, handle, PYTELCO_TYPE (PortalService));
 
   PyPortalService_init_from_handle (self, handle);
 
@@ -4106,15 +4106,15 @@ PyPortalService_init (PyPortalService * self, PyObject * args, PyObject * kw)
 }
 
 static void
-PyPortalService_init_from_handle (PyPortalService * self, FridaPortalService * handle)
+PyPortalService_init_from_handle (PyPortalService * self, TelcoPortalService * handle)
 {
-  self->device = PyDevice_new_take_handle (g_object_ref (frida_portal_service_get_device (handle)));
+  self->device = PyDevice_new_take_handle (g_object_ref (telco_portal_service_get_device (handle)));
 }
 
 static void
 PyPortalService_dealloc (PyPortalService * self)
 {
-  FridaPortalService * handle;
+  TelcoPortalService * handle;
 
   g_atomic_int_dec_and_test (&toplevel_objects_alive);
 
@@ -4122,8 +4122,8 @@ PyPortalService_dealloc (PyPortalService * self)
   if (handle != NULL)
   {
     Py_BEGIN_ALLOW_THREADS
-    frida_portal_service_stop_sync (handle, NULL, NULL);
-    frida_unref (handle);
+    telco_portal_service_stop_sync (handle, NULL, NULL);
+    telco_unref (handle);
     Py_END_ALLOW_THREADS
   }
 
@@ -4138,10 +4138,10 @@ PyPortalService_start (PyPortalService * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_portal_service_start_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_portal_service_start_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -4152,10 +4152,10 @@ PyPortalService_stop (PyPortalService * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_portal_service_stop_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_portal_service_stop_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -4169,7 +4169,7 @@ PyPortalService_kick (PyScript * self, PyObject * args)
     return NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_portal_service_kick (PY_GOBJECT_HANDLE (self), connection_id);
+  telco_portal_service_kick (PY_GOBJECT_HANDLE (self), connection_id);
   Py_END_ALLOW_THREADS
 
   Py_RETURN_NONE;
@@ -4194,7 +4194,7 @@ PyPortalService_post (PyScript * self, PyObject * args, PyObject * kw)
   data = (data_buffer != NULL) ? g_bytes_new (data_buffer, data_size) : NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_portal_service_post (PY_GOBJECT_HANDLE (self), connection_id, message, data);
+  telco_portal_service_post (PY_GOBJECT_HANDLE (self), connection_id, message, data);
   Py_END_ALLOW_THREADS
 
   g_bytes_unref (data);
@@ -4221,7 +4221,7 @@ PyPortalService_narrowcast (PyScript * self, PyObject * args, PyObject * kw)
   data = (data_buffer != NULL) ? g_bytes_new (data_buffer, data_size) : NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_portal_service_narrowcast (PY_GOBJECT_HANDLE (self), tag, message, data);
+  telco_portal_service_narrowcast (PY_GOBJECT_HANDLE (self), tag, message, data);
   Py_END_ALLOW_THREADS
 
   g_bytes_unref (data);
@@ -4248,7 +4248,7 @@ PyPortalService_broadcast (PyScript * self, PyObject * args, PyObject * kw)
   data = (data_buffer != NULL) ? g_bytes_new (data_buffer, data_size) : NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_portal_service_broadcast (PY_GOBJECT_HANDLE (self), message, data);
+  telco_portal_service_broadcast (PY_GOBJECT_HANDLE (self), message, data);
   Py_END_ALLOW_THREADS
 
   g_bytes_unref (data);
@@ -4269,7 +4269,7 @@ PyPortalService_enumerate_tags (PyScript * self, PyObject * args)
     return NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  tags = frida_portal_service_enumerate_tags (PY_GOBJECT_HANDLE (self), connection_id, &tags_length);
+  tags = telco_portal_service_enumerate_tags (PY_GOBJECT_HANDLE (self), connection_id, &tags_length);
   Py_END_ALLOW_THREADS
 
   result = PyGObject_marshal_strv (tags, tags_length);
@@ -4291,7 +4291,7 @@ PyPortalService_tag (PyScript * self, PyObject * args, PyObject * kw)
     return NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_portal_service_tag (PY_GOBJECT_HANDLE (self), connection_id, tag);
+  telco_portal_service_tag (PY_GOBJECT_HANDLE (self), connection_id, tag);
   Py_END_ALLOW_THREADS
 
   PyMem_Free (tag);
@@ -4312,7 +4312,7 @@ PyPortalService_untag (PyScript * self, PyObject * args, PyObject * kw)
     return NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_portal_service_untag (PY_GOBJECT_HANDLE (self), connection_id, tag);
+  telco_portal_service_untag (PY_GOBJECT_HANDLE (self), connection_id, tag);
   Py_END_ALLOW_THREADS
 
   PyMem_Free (tag);
@@ -4334,9 +4334,9 @@ PyEndpointParameters_init (PyEndpointParameters * self, PyObject * args, PyObjec
   PyObject * auth_callback = NULL;
   char * asset_root_value = NULL;
   GTlsCertificate * certificate = NULL;
-  FridaAuthenticationService * auth_service = NULL;
+  TelcoAuthenticationService * auth_service = NULL;
   GFile * asset_root = NULL;
-  FridaEndpointParameters * handle;
+  TelcoEndpointParameters * handle;
 
   if (PyGObject_tp_init ((PyObject *) self, args, kw) < 0)
     return -1;
@@ -4355,16 +4355,16 @@ PyEndpointParameters_init (PyEndpointParameters * self, PyObject * args, PyObjec
     goto beach;
 
   if (auth_token != NULL)
-    auth_service = FRIDA_AUTHENTICATION_SERVICE (frida_static_authentication_service_new (auth_token));
+    auth_service = TELCO_AUTHENTICATION_SERVICE (telco_static_authentication_service_new (auth_token));
   else if (auth_callback != NULL)
-    auth_service = FRIDA_AUTHENTICATION_SERVICE (frida_python_authentication_service_new (auth_callback));
+    auth_service = TELCO_AUTHENTICATION_SERVICE (telco_python_authentication_service_new (auth_callback));
 
   if (asset_root_value != NULL)
     asset_root = g_file_new_for_path (asset_root_value);
 
-  handle = frida_endpoint_parameters_new (address, port, certificate, origin, auth_service, asset_root);
+  handle = telco_endpoint_parameters_new (address, port, certificate, origin, auth_service, asset_root);
 
-  PyGObject_take_handle (&self->parent, handle, PYFRIDA_TYPE (EndpointParameters));
+  PyGObject_take_handle (&self->parent, handle, PYTELCO_TYPE (EndpointParameters));
 
   result = 0;
 
@@ -4383,15 +4383,15 @@ beach:
 }
 
 
-G_DEFINE_TYPE_EXTENDED (FridaPythonAuthenticationService, frida_python_authentication_service, G_TYPE_OBJECT, 0,
-    G_IMPLEMENT_INTERFACE (FRIDA_TYPE_AUTHENTICATION_SERVICE, frida_python_authentication_service_iface_init))
+G_DEFINE_TYPE_EXTENDED (TelcoPythonAuthenticationService, telco_python_authentication_service, G_TYPE_OBJECT, 0,
+    G_IMPLEMENT_INTERFACE (TELCO_TYPE_AUTHENTICATION_SERVICE, telco_python_authentication_service_iface_init))
 
-static FridaPythonAuthenticationService *
-frida_python_authentication_service_new (PyObject * callback)
+static TelcoPythonAuthenticationService *
+telco_python_authentication_service_new (PyObject * callback)
 {
-  FridaPythonAuthenticationService * service;
+  TelcoPythonAuthenticationService * service;
 
-  service = g_object_new (FRIDA_TYPE_PYTHON_AUTHENTICATION_SERVICE, NULL);
+  service = g_object_new (TELCO_TYPE_PYTHON_AUTHENTICATION_SERVICE, NULL);
   service->callback = callback;
   Py_IncRef (callback);
 
@@ -4399,32 +4399,32 @@ frida_python_authentication_service_new (PyObject * callback)
 }
 
 static void
-frida_python_authentication_service_class_init (FridaPythonAuthenticationServiceClass * klass)
+telco_python_authentication_service_class_init (TelcoPythonAuthenticationServiceClass * klass)
 {
   GObjectClass * object_class = G_OBJECT_CLASS (klass);
 
-  object_class->dispose = frida_python_authentication_service_dispose;
+  object_class->dispose = telco_python_authentication_service_dispose;
 }
 
 static void
-frida_python_authentication_service_iface_init (gpointer g_iface, gpointer iface_data)
+telco_python_authentication_service_iface_init (gpointer g_iface, gpointer iface_data)
 {
-  FridaAuthenticationServiceIface * iface = g_iface;
+  TelcoAuthenticationServiceIface * iface = g_iface;
 
-  iface->authenticate = frida_python_authentication_service_authenticate;
-  iface->authenticate_finish = frida_python_authentication_service_authenticate_finish;
+  iface->authenticate = telco_python_authentication_service_authenticate;
+  iface->authenticate_finish = telco_python_authentication_service_authenticate_finish;
 }
 
 static void
-frida_python_authentication_service_init (FridaPythonAuthenticationService * self)
+telco_python_authentication_service_init (TelcoPythonAuthenticationService * self)
 {
-  self->pool = g_thread_pool_new ((GFunc) frida_python_authentication_service_do_authenticate, self, 1, FALSE, NULL);
+  self->pool = g_thread_pool_new ((GFunc) telco_python_authentication_service_do_authenticate, self, 1, FALSE, NULL);
 }
 
 static void
-frida_python_authentication_service_dispose (GObject * object)
+telco_python_authentication_service_dispose (GObject * object)
 {
-  FridaPythonAuthenticationService * self = FRIDA_PYTHON_AUTHENTICATION_SERVICE (object);
+  TelcoPythonAuthenticationService * self = TELCO_PYTHON_AUTHENTICATION_SERVICE (object);
 
   if (self->pool != NULL)
   {
@@ -4444,17 +4444,17 @@ frida_python_authentication_service_dispose (GObject * object)
     PyGILState_Release (gstate);
   }
 
-  G_OBJECT_CLASS (frida_python_authentication_service_parent_class)->dispose (object);
+  G_OBJECT_CLASS (telco_python_authentication_service_parent_class)->dispose (object);
 }
 
 static void
-frida_python_authentication_service_authenticate (FridaAuthenticationService * service, const gchar * token, GCancellable * cancellable,
+telco_python_authentication_service_authenticate (TelcoAuthenticationService * service, const gchar * token, GCancellable * cancellable,
     GAsyncReadyCallback callback, gpointer user_data)
 {
-  FridaPythonAuthenticationService * self;
+  TelcoPythonAuthenticationService * self;
   GTask * task;
 
-  self = FRIDA_PYTHON_AUTHENTICATION_SERVICE (service);
+  self = TELCO_PYTHON_AUTHENTICATION_SERVICE (service);
 
   task = g_task_new (self, cancellable, callback, user_data);
   g_task_set_task_data (task, g_strdup (token), g_free);
@@ -4463,13 +4463,13 @@ frida_python_authentication_service_authenticate (FridaAuthenticationService * s
 }
 
 static gchar *
-frida_python_authentication_service_authenticate_finish (FridaAuthenticationService * service, GAsyncResult * result, GError ** error)
+telco_python_authentication_service_authenticate_finish (TelcoAuthenticationService * service, GAsyncResult * result, GError ** error)
 {
   return g_task_propagate_pointer (G_TASK (result), error);
 }
 
 static void
-frida_python_authentication_service_do_authenticate (GTask * task, FridaPythonAuthenticationService * self)
+telco_python_authentication_service_do_authenticate (GTask * task, TelcoPythonAuthenticationService * self)
 {
   const gchar * token;
   PyGILState_STATE gstate;
@@ -4511,7 +4511,7 @@ frida_python_authentication_service_do_authenticate (GTask * task, FridaPythonAu
   if (session_info != NULL)
     g_task_return_pointer (task, session_info, g_free);
   else
-    g_task_return_new_error (task, FRIDA_ERROR, FRIDA_ERROR_INVALID_ARGUMENT, "%s", message);
+    g_task_return_new_error (task, TELCO_ERROR, TELCO_ERROR_INVALID_ARGUMENT, "%s", message);
 
   g_free (message);
   g_object_unref (task);
@@ -4526,10 +4526,10 @@ PyCompiler_init (PyCompiler * self, PyObject * args, PyObject * kw)
   if (PyGObject_tp_init ((PyObject *) self, args, kw) < 0)
     return -1;
 
-  if (!PyArg_ParseTuple (args, "O!", PYFRIDA_TYPE_OBJECT (DeviceManager), &manager))
+  if (!PyArg_ParseTuple (args, "O!", PYTELCO_TYPE_OBJECT (DeviceManager), &manager))
     return -1;
 
-  PyGObject_take_handle (&self->parent, frida_compiler_new (PY_GOBJECT_HANDLE (manager)), PYFRIDA_TYPE (Compiler));
+  PyGObject_take_handle (&self->parent, telco_compiler_new (PY_GOBJECT_HANDLE (manager)), PYTELCO_TYPE (Compiler));
 
   return 0;
 }
@@ -4543,25 +4543,25 @@ PyCompiler_build (PyCompiler * self, PyObject * args, PyObject * kw)
   const char * project_root = NULL;
   const char * source_maps = NULL;
   const char * compression = NULL;
-  FridaBuildOptions * options;
+  TelcoBuildOptions * options;
   GError * error = NULL;
   gchar * bundle;
 
   if (!PyArg_ParseTupleAndKeywords (args, kw, "s|sss", keywords, &entrypoint, &project_root, &source_maps, &compression))
     return NULL;
 
-  options = frida_build_options_new ();
-  if (!PyCompiler_set_options (FRIDA_COMPILER_OPTIONS (options), project_root, source_maps, compression))
+  options = telco_build_options_new ();
+  if (!PyCompiler_set_options (TELCO_COMPILER_OPTIONS (options), project_root, source_maps, compression))
     goto invalid_option_value;
 
   Py_BEGIN_ALLOW_THREADS
-  bundle = frida_compiler_build_sync (PY_GOBJECT_HANDLE (self), entrypoint, options, g_cancellable_get_current (), &error);
+  bundle = telco_compiler_build_sync (PY_GOBJECT_HANDLE (self), entrypoint, options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   g_object_unref (options);
 
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   result = PyUnicode_FromUTF8String (bundle);
   g_free (bundle);
@@ -4583,24 +4583,24 @@ PyCompiler_watch (PyCompiler * self, PyObject * args, PyObject * kw)
   const char * project_root = NULL;
   const char * source_maps = NULL;
   const char * compression = NULL;
-  FridaWatchOptions * options;
+  TelcoWatchOptions * options;
   GError * error = NULL;
 
   if (!PyArg_ParseTupleAndKeywords (args, kw, "s|sss", keywords, &entrypoint, &project_root, &source_maps, &compression))
     return NULL;
 
-  options = frida_watch_options_new ();
-  if (!PyCompiler_set_options (FRIDA_COMPILER_OPTIONS (options), project_root, source_maps, compression))
+  options = telco_watch_options_new ();
+  if (!PyCompiler_set_options (TELCO_COMPILER_OPTIONS (options), project_root, source_maps, compression))
     goto invalid_option_value;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_compiler_watch_sync (PY_GOBJECT_HANDLE (self), entrypoint, options, g_cancellable_get_current (), &error);
+  telco_compiler_watch_sync (PY_GOBJECT_HANDLE (self), entrypoint, options, g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
 
   g_object_unref (options);
 
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 
@@ -4612,30 +4612,30 @@ invalid_option_value:
 }
 
 static gboolean
-PyCompiler_set_options (FridaCompilerOptions * options, const gchar * project_root_value, const gchar * source_maps_value,
+PyCompiler_set_options (TelcoCompilerOptions * options, const gchar * project_root_value, const gchar * source_maps_value,
     const gchar * compression_value)
 {
   if (project_root_value != NULL)
-    frida_compiler_options_set_project_root (options, project_root_value);
+    telco_compiler_options_set_project_root (options, project_root_value);
 
   if (source_maps_value != NULL)
   {
-    FridaSourceMaps source_maps;
+    TelcoSourceMaps source_maps;
 
-    if (!PyGObject_unmarshal_enum (source_maps_value, FRIDA_TYPE_SOURCE_MAPS, &source_maps))
+    if (!PyGObject_unmarshal_enum (source_maps_value, TELCO_TYPE_SOURCE_MAPS, &source_maps))
       return FALSE;
 
-    frida_compiler_options_set_source_maps (options, source_maps);
+    telco_compiler_options_set_source_maps (options, source_maps);
   }
 
   if (compression_value != NULL)
   {
-    FridaJsCompression compression;
+    TelcoJsCompression compression;
 
-    if (!PyGObject_unmarshal_enum (compression_value, FRIDA_TYPE_JS_COMPRESSION, &compression))
+    if (!PyGObject_unmarshal_enum (compression_value, TELCO_TYPE_JS_COMPRESSION, &compression))
       return FALSE;
 
-    frida_compiler_options_set_compression (options, compression);
+    telco_compiler_options_set_compression (options, compression);
   }
 
   return TRUE;
@@ -4653,7 +4653,7 @@ PyFileMonitor_init (PyFileMonitor * self, PyObject * args, PyObject * kw)
   if (!PyArg_ParseTuple (args, "s", &path))
     return -1;
 
-  PyGObject_take_handle (&self->parent, frida_file_monitor_new (path), PYFRIDA_TYPE (FileMonitor));
+  PyGObject_take_handle (&self->parent, telco_file_monitor_new (path), PYTELCO_TYPE (FileMonitor));
 
   return 0;
 }
@@ -4664,10 +4664,10 @@ PyFileMonitor_enable (PyFileMonitor * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_file_monitor_enable_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_file_monitor_enable_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -4678,10 +4678,10 @@ PyFileMonitor_disable (PyFileMonitor * self)
   GError * error = NULL;
 
   Py_BEGIN_ALLOW_THREADS
-  frida_file_monitor_disable_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
+  telco_file_monitor_disable_sync (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -4690,7 +4690,7 @@ PyFileMonitor_disable (PyFileMonitor * self)
 static PyObject *
 PyIOStream_new_take_handle (GIOStream * handle)
 {
-  return PyGObject_new_take_handle (handle, PYFRIDA_TYPE (IOStream));
+  return PyGObject_new_take_handle (handle, PYTELCO_TYPE (IOStream));
 }
 
 static int
@@ -4737,7 +4737,7 @@ PyIOStream_close (PyIOStream * self)
   g_io_stream_close (PY_GOBJECT_HANDLE (self), g_cancellable_get_current (), &error);
   Py_END_ALLOW_THREADS
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -4777,7 +4777,7 @@ PyIOStream_read (PyIOStream * self, PyObject * args)
   }
   else
   {
-    result = PyFrida_raise (error);
+    result = PyTelco_raise (error);
 
     Py_DECREF (buffer);
   }
@@ -4811,7 +4811,7 @@ PyIOStream_read_all (PyIOStream * self, PyObject * args)
   }
   else
   {
-    result = PyFrida_raise (error);
+    result = PyTelco_raise (error);
 
     Py_DECREF (buffer);
   }
@@ -4835,7 +4835,7 @@ PyIOStream_write (PyIOStream * self, PyObject * args)
   Py_END_ALLOW_THREADS
 
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   return PyLong_FromSsize_t (bytes_written);
 }
@@ -4855,7 +4855,7 @@ PyIOStream_write_all (PyIOStream * self, PyObject * args)
   Py_END_ALLOW_THREADS
 
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -4869,7 +4869,7 @@ PyCancellable_new_take_handle (GCancellable * handle)
   object = (handle != NULL) ? PyGObject_try_get_from_handle (handle) : NULL;
   if (object == NULL)
   {
-    object = PyObject_CallFunction (PYFRIDA_TYPE_OBJECT (Cancellable), "z#", (char *) &handle, (Py_ssize_t) sizeof (handle));
+    object = PyObject_CallFunction (PYTELCO_TYPE_OBJECT (Cancellable), "z#", (char *) &handle, (Py_ssize_t) sizeof (handle));
   }
   else
   {
@@ -4899,7 +4899,7 @@ PyCancellable_init (PyCancellable * self, PyObject * args, PyObject * kw)
   else
     handle = g_cancellable_new ();
 
-  PyGObject_take_handle (&self->parent, handle, PYFRIDA_TYPE (Cancellable));
+  PyGObject_take_handle (&self->parent, handle, PYTELCO_TYPE (Cancellable));
 
   return 0;
 }
@@ -4927,7 +4927,7 @@ PyCancellable_raise_if_cancelled (PyCancellable * self)
 
   g_cancellable_set_error_if_cancelled (PY_GOBJECT_HANDLE (self), &error);
   if (error != NULL)
-    return PyFrida_raise (error);
+    return PyTelco_raise (error);
 
   Py_RETURN_NONE;
 }
@@ -4981,9 +4981,9 @@ PyCancellable_pop_current (PyCancellable * self)
 
 invalid_operation:
   {
-    return PyFrida_raise (g_error_new (
-          FRIDA_ERROR,
-          FRIDA_ERROR_INVALID_OPERATION,
+    return PyTelco_raise (g_error_new (
+          TELCO_ERROR,
+          TELCO_ERROR_INVALID_OPERATION,
           "Cancellable is not on top of the stack"));
   }
 }
@@ -5078,21 +5078,21 @@ PyCancellable_cancel (PyCancellable * self)
 
 
 static void
-PyFrida_object_decref (gpointer obj)
+PyTelco_object_decref (gpointer obj)
 {
   PyObject * o = obj;
   Py_DECREF (o);
 }
 
 static PyObject *
-PyFrida_raise (GError * error)
+PyTelco_raise (GError * error)
 {
   PyObject * exception;
   GString * message;
 
-  if (error->domain == FRIDA_ERROR)
+  if (error->domain == TELCO_ERROR)
   {
-    exception = g_hash_table_lookup (frida_exception_by_error_code, GINT_TO_POINTER (error->code));
+    exception = g_hash_table_lookup (telco_exception_by_error_code, GINT_TO_POINTER (error->code));
     g_assert (exception != NULL);
   }
   else
@@ -5115,13 +5115,13 @@ PyFrida_raise (GError * error)
 }
 
 static gboolean
-PyFrida_is_string (PyObject * obj)
+PyTelco_is_string (PyObject * obj)
 {
   return PyUnicode_Check (obj);
 }
 
 static gchar *
-PyFrida_repr (PyObject * obj)
+PyTelco_repr (PyObject * obj)
 {
   gchar * result;
   PyObject * repr_value;
@@ -5136,7 +5136,7 @@ PyFrida_repr (PyObject * obj)
 }
 
 static guint
-PyFrida_get_max_argument_count (PyObject * callable)
+PyTelco_get_max_argument_count (PyObject * callable)
 {
   guint result = G_MAXUINT;
   PyObject * spec;
@@ -5172,12 +5172,12 @@ beach:
 }
 
 
-MOD_INIT (_frida)
+MOD_INIT (_telco)
 {
   PyObject * inspect, * datetime, * module;
 
   inspect = PyImport_ImportModule ("inspect");
-  inspect_getargspec = PyObject_GetAttrString (inspect, PYFRIDA_GETARGSPEC_FUNCTION);
+  inspect_getargspec = PyObject_GetAttrString (inspect, PYTELCO_GETARGSPEC_FUNCTION);
   inspect_ismethod = PyObject_GetAttrString (inspect, "ismethod");
   Py_DECREF (inspect);
 
@@ -5185,61 +5185,61 @@ MOD_INIT (_frida)
   datetime_constructor = PyObject_GetAttrString (datetime, "datetime");
   Py_DECREF (datetime);
 
-  frida_init ();
+  telco_init ();
 
   PyGObject_class_init ();
 
-  MOD_DEF (module, "_frida", "Frida", NULL);
+  MOD_DEF (module, "_telco", "Telco", NULL);
 
-  PyModule_AddStringConstant (module, "__version__", frida_version_string ());
+  PyModule_AddStringConstant (module, "__version__", telco_version_string ());
 
-  PYFRIDA_REGISTER_TYPE (GObject, G_TYPE_OBJECT);
-  PyGObject_tp_init = PyType_GetSlot ((PyTypeObject *) PYFRIDA_TYPE_OBJECT (GObject), Py_tp_init);
-  PyGObject_tp_dealloc = PyType_GetSlot ((PyTypeObject *) PYFRIDA_TYPE_OBJECT (GObject), Py_tp_dealloc);
+  PYTELCO_REGISTER_TYPE (GObject, G_TYPE_OBJECT);
+  PyGObject_tp_init = PyType_GetSlot ((PyTypeObject *) PYTELCO_TYPE_OBJECT (GObject), Py_tp_init);
+  PyGObject_tp_dealloc = PyType_GetSlot ((PyTypeObject *) PYTELCO_TYPE_OBJECT (GObject), Py_tp_dealloc);
 
-  PYFRIDA_REGISTER_TYPE (DeviceManager, FRIDA_TYPE_DEVICE_MANAGER);
-  PYFRIDA_REGISTER_TYPE (Device, FRIDA_TYPE_DEVICE);
-  PYFRIDA_REGISTER_TYPE (Application, FRIDA_TYPE_APPLICATION);
-  PYFRIDA_REGISTER_TYPE (Process, FRIDA_TYPE_PROCESS);
-  PYFRIDA_REGISTER_TYPE (Spawn, FRIDA_TYPE_SPAWN);
-  PYFRIDA_REGISTER_TYPE (Child, FRIDA_TYPE_CHILD);
-  PYFRIDA_REGISTER_TYPE (Crash, FRIDA_TYPE_CRASH);
-  PYFRIDA_REGISTER_TYPE (Bus, FRIDA_TYPE_BUS);
-  PYFRIDA_REGISTER_TYPE (Session, FRIDA_TYPE_SESSION);
-  PYFRIDA_REGISTER_TYPE (Script, FRIDA_TYPE_SCRIPT);
-  PYFRIDA_REGISTER_TYPE (Relay, FRIDA_TYPE_RELAY);
-  PYFRIDA_REGISTER_TYPE (PortalMembership, FRIDA_TYPE_PORTAL_MEMBERSHIP);
-  PYFRIDA_REGISTER_TYPE (PortalService, FRIDA_TYPE_PORTAL_SERVICE);
-  PYFRIDA_REGISTER_TYPE (EndpointParameters, FRIDA_TYPE_ENDPOINT_PARAMETERS);
-  PYFRIDA_REGISTER_TYPE (Compiler, FRIDA_TYPE_COMPILER);
-  PYFRIDA_REGISTER_TYPE (FileMonitor, FRIDA_TYPE_FILE_MONITOR);
-  PYFRIDA_REGISTER_TYPE (IOStream, G_TYPE_IO_STREAM);
-  PYFRIDA_REGISTER_TYPE (Cancellable, G_TYPE_CANCELLABLE);
+  PYTELCO_REGISTER_TYPE (DeviceManager, TELCO_TYPE_DEVICE_MANAGER);
+  PYTELCO_REGISTER_TYPE (Device, TELCO_TYPE_DEVICE);
+  PYTELCO_REGISTER_TYPE (Application, TELCO_TYPE_APPLICATION);
+  PYTELCO_REGISTER_TYPE (Process, TELCO_TYPE_PROCESS);
+  PYTELCO_REGISTER_TYPE (Spawn, TELCO_TYPE_SPAWN);
+  PYTELCO_REGISTER_TYPE (Child, TELCO_TYPE_CHILD);
+  PYTELCO_REGISTER_TYPE (Crash, TELCO_TYPE_CRASH);
+  PYTELCO_REGISTER_TYPE (Bus, TELCO_TYPE_BUS);
+  PYTELCO_REGISTER_TYPE (Session, TELCO_TYPE_SESSION);
+  PYTELCO_REGISTER_TYPE (Script, TELCO_TYPE_SCRIPT);
+  PYTELCO_REGISTER_TYPE (Relay, TELCO_TYPE_RELAY);
+  PYTELCO_REGISTER_TYPE (PortalMembership, TELCO_TYPE_PORTAL_MEMBERSHIP);
+  PYTELCO_REGISTER_TYPE (PortalService, TELCO_TYPE_PORTAL_SERVICE);
+  PYTELCO_REGISTER_TYPE (EndpointParameters, TELCO_TYPE_ENDPOINT_PARAMETERS);
+  PYTELCO_REGISTER_TYPE (Compiler, TELCO_TYPE_COMPILER);
+  PYTELCO_REGISTER_TYPE (FileMonitor, TELCO_TYPE_FILE_MONITOR);
+  PYTELCO_REGISTER_TYPE (IOStream, G_TYPE_IO_STREAM);
+  PYTELCO_REGISTER_TYPE (Cancellable, G_TYPE_CANCELLABLE);
 
-  frida_exception_by_error_code = g_hash_table_new_full (NULL, NULL, NULL, PyFrida_object_decref);
-#define PYFRIDA_DECLARE_EXCEPTION(code, name) \
+  telco_exception_by_error_code = g_hash_table_new_full (NULL, NULL, NULL, PyTelco_object_decref);
+#define PYTELCO_DECLARE_EXCEPTION(code, name) \
     do \
     { \
-      PyObject * exception = PyErr_NewException ("frida." name "Error", NULL, NULL); \
-      g_hash_table_insert (frida_exception_by_error_code, GINT_TO_POINTER (G_PASTE (FRIDA_ERROR_, code)), exception); \
+      PyObject * exception = PyErr_NewException ("telco." name "Error", NULL, NULL); \
+      g_hash_table_insert (telco_exception_by_error_code, GINT_TO_POINTER (G_PASTE (TELCO_ERROR_, code)), exception); \
       Py_INCREF (exception); \
       PyModule_AddObject (module, name "Error", exception); \
     } while (FALSE)
-  PYFRIDA_DECLARE_EXCEPTION (SERVER_NOT_RUNNING, "ServerNotRunning");
-  PYFRIDA_DECLARE_EXCEPTION (EXECUTABLE_NOT_FOUND, "ExecutableNotFound");
-  PYFRIDA_DECLARE_EXCEPTION (EXECUTABLE_NOT_SUPPORTED, "ExecutableNotSupported");
-  PYFRIDA_DECLARE_EXCEPTION (PROCESS_NOT_FOUND, "ProcessNotFound");
-  PYFRIDA_DECLARE_EXCEPTION (PROCESS_NOT_RESPONDING, "ProcessNotResponding");
-  PYFRIDA_DECLARE_EXCEPTION (INVALID_ARGUMENT, "InvalidArgument");
-  PYFRIDA_DECLARE_EXCEPTION (INVALID_OPERATION, "InvalidOperation");
-  PYFRIDA_DECLARE_EXCEPTION (PERMISSION_DENIED, "PermissionDenied");
-  PYFRIDA_DECLARE_EXCEPTION (ADDRESS_IN_USE, "AddressInUse");
-  PYFRIDA_DECLARE_EXCEPTION (TIMED_OUT, "TimedOut");
-  PYFRIDA_DECLARE_EXCEPTION (NOT_SUPPORTED, "NotSupported");
-  PYFRIDA_DECLARE_EXCEPTION (PROTOCOL, "Protocol");
-  PYFRIDA_DECLARE_EXCEPTION (TRANSPORT, "Transport");
+  PYTELCO_DECLARE_EXCEPTION (SERVER_NOT_RUNNING, "ServerNotRunning");
+  PYTELCO_DECLARE_EXCEPTION (EXECUTABLE_NOT_FOUND, "ExecutableNotFound");
+  PYTELCO_DECLARE_EXCEPTION (EXECUTABLE_NOT_SUPPORTED, "ExecutableNotSupported");
+  PYTELCO_DECLARE_EXCEPTION (PROCESS_NOT_FOUND, "ProcessNotFound");
+  PYTELCO_DECLARE_EXCEPTION (PROCESS_NOT_RESPONDING, "ProcessNotResponding");
+  PYTELCO_DECLARE_EXCEPTION (INVALID_ARGUMENT, "InvalidArgument");
+  PYTELCO_DECLARE_EXCEPTION (INVALID_OPERATION, "InvalidOperation");
+  PYTELCO_DECLARE_EXCEPTION (PERMISSION_DENIED, "PermissionDenied");
+  PYTELCO_DECLARE_EXCEPTION (ADDRESS_IN_USE, "AddressInUse");
+  PYTELCO_DECLARE_EXCEPTION (TIMED_OUT, "TimedOut");
+  PYTELCO_DECLARE_EXCEPTION (NOT_SUPPORTED, "NotSupported");
+  PYTELCO_DECLARE_EXCEPTION (PROTOCOL, "Protocol");
+  PYTELCO_DECLARE_EXCEPTION (TRANSPORT, "Transport");
 
-  cancelled_exception = PyErr_NewException ("frida.OperationCancelledError", NULL, NULL);
+  cancelled_exception = PyErr_NewException ("telco.OperationCancelledError", NULL, NULL);
   Py_INCREF (cancelled_exception);
   PyModule_AddObject (module, "OperationCancelledError", cancelled_exception);
 

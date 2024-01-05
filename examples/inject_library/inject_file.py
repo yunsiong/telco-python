@@ -8,7 +8,7 @@
 
 import sys
 
-import frida
+import telco
 
 
 def on_uninjected(id):
@@ -17,7 +17,7 @@ def on_uninjected(id):
 
 (target, library_path) = sys.argv[1:]
 
-device = frida.get_local_device()
+device = telco.get_local_device()
 device.on("uninjected", on_uninjected)
 id = device.inject_library_file(target, library_path, "example_main", "w00t")
 print("*** Injected, id=%u -- hit Ctrl+D to exit!" % id)

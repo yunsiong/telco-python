@@ -1,6 +1,6 @@
-import frida
+import telco
 
-session = frida.attach("Twitter")
+session = telco.attach("Twitter")
 script = session.create_script(
     """\
 rpc.exports = {

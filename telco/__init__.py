@@ -1,45 +1,45 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 try:
-    import _frida
+    import _telco
 except Exception as ex:
     print("")
     print("***")
     if str(ex).startswith("No module named "):
-        print("Frida native extension not found")
+        print("Telco native extension not found")
         print("Please check your PYTHONPATH.")
     else:
-        print(f"Failed to load the Frida native extension: {ex}")
+        print(f"Failed to load the Telco native extension: {ex}")
         print("Please ensure that the extension was compiled correctly")
     print("***")
     print("")
     raise ex
 from . import core
 
-__version__: str = _frida.__version__
+__version__: str = _telco.__version__
 
 get_device_manager = core.get_device_manager
-Relay = _frida.Relay
+Relay = _telco.Relay
 PortalService = core.PortalService
 EndpointParameters = core.EndpointParameters
 Compiler = core.Compiler
-FileMonitor = _frida.FileMonitor
+FileMonitor = _telco.FileMonitor
 Cancellable = core.Cancellable
 
-ServerNotRunningError = _frida.ServerNotRunningError
-ExecutableNotFoundError = _frida.ExecutableNotFoundError
-ExecutableNotSupportedError = _frida.ExecutableNotSupportedError
-ProcessNotFoundError = _frida.ProcessNotFoundError
-ProcessNotRespondingError = _frida.ProcessNotRespondingError
-InvalidArgumentError = _frida.InvalidArgumentError
-InvalidOperationError = _frida.InvalidOperationError
-PermissionDeniedError = _frida.PermissionDeniedError
-AddressInUseError = _frida.AddressInUseError
-TimedOutError = _frida.TimedOutError
-NotSupportedError = _frida.NotSupportedError
-ProtocolError = _frida.ProtocolError
-TransportError = _frida.TransportError
-OperationCancelledError = _frida.OperationCancelledError
+ServerNotRunningError = _telco.ServerNotRunningError
+ExecutableNotFoundError = _telco.ExecutableNotFoundError
+ExecutableNotSupportedError = _telco.ExecutableNotSupportedError
+ProcessNotFoundError = _telco.ProcessNotFoundError
+ProcessNotRespondingError = _telco.ProcessNotRespondingError
+InvalidArgumentError = _telco.InvalidArgumentError
+InvalidOperationError = _telco.InvalidOperationError
+PermissionDeniedError = _telco.PermissionDeniedError
+AddressInUseError = _telco.AddressInUseError
+TimedOutError = _telco.TimedOutError
+NotSupportedError = _telco.NotSupportedError
+ProtocolError = _telco.ProtocolError
+TransportError = _telco.TransportError
+OperationCancelledError = _telco.OperationCancelledError
 
 
 def query_system_parameters() -> Dict[str, Any]:

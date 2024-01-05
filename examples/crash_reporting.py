@@ -1,6 +1,6 @@
 import sys
 
-import frida
+import telco
 
 
 def on_process_crashed(crash):
@@ -14,7 +14,7 @@ def on_detached(reason, crash):
     print("\tcrash:", crash)
 
 
-device = frida.get_usb_device()
+device = telco.get_usb_device()
 device.on("process-crashed", on_process_crashed)
 session = device.attach("Hello")
 session.on("detached", on_detached)

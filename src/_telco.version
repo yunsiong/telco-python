@@ -1,6 +1,6 @@
 {
   global:
-    PyInit__frida;
+    PyInit__telco;
 
   local:
     *;
