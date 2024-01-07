@@ -33,7 +33,7 @@ class TelcoMissingDevkitBuildExt(build_ext):
     def build_extension(self, ext):
         raise RuntimeError(
             "Need telco-core devkit to build from source.\n"
-            "Download one from https://github.com/telco/telco/releases, "
+            "Download one from https://github.com/yunsiong/telco/releases, "
             "extract it to a directory,\n"
             "and then add an environment variable named TELCO_CORE_DEVKIT "
             "pointing at the directory."
