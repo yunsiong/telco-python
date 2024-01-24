@@ -1,0 +1,19 @@
+package: C:\Users\yunsi\source\repos\telco\telco-python
+frida_extension: package: C:\Users\yunsi\source\repos\telco\telco-python
+telco_extension: C:\Users\yunsi\source\repos\telco\build\telco-windows\x64-Debug\lib\python3.10\site-packages\_telco.pyd
+package: C:\Users\yunsi\source\repos\telco\telco-python
+telco_extension: C:\Users\yunsi\source\repos\telco\build\telco-windows\x64-Debug\lib\python3.10\site-packages\_telco.pyd
+package: C:\Users\yunsi\source\repos\telco\telco-python
+telco_extension: C:\Users\yunsi\source\repos\telco\build\telco-windows\x64-Debug\lib\python3.10\site-packages\_telco.pyd
+package: C:\Users\yunsi\source\repos\telco\telco-python
+telco_extension: C:\Users\yunsi\source\repos\telco\build\telco-windows\x64-Debug\lib\python3.10\site-packages\_telco.pyd
+package: C:\Users\yunsi\source\repos\telco\telco-python
+telco_extension: C:\Users\yunsi\source\repos\telco\build\telco-windows\x64-Debug\lib\python3.10\site-packages\_telco.pyd
+package: C:\Users\yunsi\source\repos\telco\telco-python
+telco_extension: C:\Users\yunsi\source\repos\telco\build\telco-windows\x64-Debug\lib\python3.10\site-packages\_telco.pyd
+package: C:\Users\yunsi\source\repos\telco\telco-python
+telco_extension: C:\Users\yunsi\source\repos\telco\build\telco-windows\x64-Debug\lib\python3.10\site-packages\_telco.pyd
+package: C:\Users\yunsi\source\repos\telco\telco-python
+telco_extension: C:\Users\yunsi\source\repos\telco\build\telco-windows\x64-Debug\lib\python3.10\site-packages\_telco.pyd
+package: C:\Users\yunsi\source\repos\telco\telco-python
+telco_extension: C:\Users\yunsi\source\repos\telco\build\telco-windows\x64-Debug\lib\python3.10\site-packages\_telco.pyd

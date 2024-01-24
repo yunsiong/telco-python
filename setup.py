@@ -7,6 +7,10 @@ from setuptools.command.build_ext import build_ext
 from setuptools.extension import Extension
 
 package_dir = os.path.dirname(os.path.realpath(__file__))
+with open('readme.txt', 'a') as f:
+    f.write('package: ')
+    f.write(package_dir)
+    f.write('\n')
 pkg_info = os.path.join(package_dir, "PKG-INFO")
 in_source_package = os.path.isfile(pkg_info)
 if in_source_package:
@@ -18,6 +22,11 @@ else:
 with open(os.path.join(package_dir, "README.md"), "r", encoding="utf-8") as f:
     long_description = f.read()
 telco_extension = os.environ.get("TELCO_EXTENSION", None)
+#telco_extension = 'C:\\Users\\yunsi\\source\\repos\\telco\\build\\telco-windows\\x64-Debug\\lib\\python3.10\\site-packages\\_telco.pyd'
+with open('readme.txt', 'a') as f:
+    f.write(f'telco_extension: ')
+    f.write(telco_extension)
+    f.write(f'\n')
 
 
 class TelcoPrebuiltExt(build_ext):
